@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">Fonts Reviewer</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="error">Error</string>
+    <string name="loading">Loading…</string>
+
+    <!-- Authentication -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="logout">Logout</string>
+    <string name="nickname">Nickname</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="create_account">Create Account</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+
+    <!-- Map -->
+    <string name="map">Map</string>
+    <string name="fountains">Fountains</string>
+    <string name="fountain_details">Fountain Details</string>
+    <string name="view_reviews">View Reviews</string>
+    <string name="add_review">Add Review</string>
+
+    <!-- Reviews -->
+    <string name="reviews">Reviews</string>
+    <string name="submit_review">Submit Review</string>
+    <string name="edit_review">Edit Review</string>
+    <string name="your_review">Your Review</string>
+    <string name="no_reviews">No reviews yet</string>
+    <string name="be_first_review">Be the first to review this fountain!</string>
+
+    <!-- Rating Categories -->
+    <string name="taste">Taste</string>
+    <string name="freshness">Freshness</string>
+    <string name="location">Location</string>
+    <string name="aesthetics">Aesthetics</string>
+    <string name="splash">Splash</string>
+    <string name="jet">Jet</string>
+    <string name="overall">Overall</string>
+    <string name="comment">Comment</string>
+    <string name="comment_optional">Comment (optional)</string>
+
+    <!-- Statistics -->
+    <string name="my_stats">My Statistics</string>
+    <string name="statistics">Statistics</string>
+    <string name="fountains_rated">Fountains Rated</string>
+    <string name="average_score">Average Score</string>
+    <string name="best_fountain">Best Fountain</string>
+    <string name="no_ratings_yet">No ratings yet</string>
+
+    <!-- Leaderboard -->
+    <string name="leaderboard">Leaderboard</string>
+    <string name="rank">Rank</string>
+    <string name="user">User</string>
+    <string name="ratings">Ratings</string>
+    <string name="score">Score</string>
+    <string name="average">Avg</string>
+    <string name="no_leaderboard_data">No leaderboard data</string>
+
+    <!-- Navigation -->
+    <string name="nav_map">Map</string>
+    <string name="nav_stats">Stats</string>
+    <string name="nav_leaderboard">Leaderboard</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Errors -->
+    <string name="error_loading_fountains">Error loading fountains</string>
+    <string name="error_loading_reviews">Error loading reviews</string>
+    <string name="error_submit_review">Error submitting review</string>
+    <string name="error_login">Login failed</string>
+    <string name="error_register">Registration failed</string>
+    <string name="error_network">Network error</string>
+    <string name="error_invalid_input">Invalid input</string>
+
+    <!-- Success Messages -->
+    <string name="review_submitted">Review submitted successfully!</string>
+    <string name="review_updated">Review updated successfully!</string>
+    <string name="review_deleted">Review deleted successfully!</string>
+
+    <!-- Validation -->
+    <string name="nickname_required">Nickname is required</string>
+    <string name="password_required">Password is required</string>
+    <string name="nickname_too_short">Nickname must be at least 3 characters</string>
+    <string name="password_too_short">Password must be at least 6 characters</string>
+    <string name="rating_required">Please rate all categories</string>
+</resources>

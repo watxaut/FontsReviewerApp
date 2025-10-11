@@ -1,0 +1,52 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Sensitive configuration files (Supabase, API keys, etc.)
+app/src/main/res/values/supabase_config.xml
+**/secrets.properties
+**/*_secret.xml
+
+# Logs
+*.log
+logs/
+log/
+
+# Build outputs
+/app/build/
+*/build/
+/buildSrc/build/
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Android Studio
+*.iws
+.idea/
+*.hprof
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Signing files (if any)
+*.jks
+*.keystore
+release/
+
+# claude local specific
+.claude

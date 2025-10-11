@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">Fonts Reviewer</string>
+
+    <!-- Common -->
+    <string name="ok">D\'acord</string>
+    <string name="cancel">Cancel·lar</string>
+    <string name="save">Desar</string>
+    <string name="delete">Eliminar</string>
+    <string name="error">Error</string>
+    <string name="loading">Carregant…</string>
+
+    <!-- Authentication -->
+    <string name="login">Iniciar sessió</string>
+    <string name="register">Registrar-se</string>
+    <string name="logout">Tancar sessió</string>
+    <string name="nickname">Sobrenom</string>
+    <string name="password">Contrasenya</string>
+    <string name="email">Correu electrònic</string>
+    <string name="sign_in">Entrar</string>
+    <string name="sign_up">Crear compte</string>
+    <string name="create_account">Crear compte</string>
+    <string name="already_have_account">Ja tens un compte?</string>
+    <string name="dont_have_account">No tens compte?</string>
+
+    <!-- Map -->
+    <string name="map">Mapa</string>
+    <string name="fountains">Fonts</string>
+    <string name="fountain_details">Detalls de la font</string>
+    <string name="view_reviews">Veure ressenyes</string>
+    <string name="add_review">Afegir ressenya</string>
+
+    <!-- Reviews -->
+    <string name="reviews">Ressenyes</string>
+    <string name="submit_review">Enviar ressenya</string>
+    <string name="edit_review">Editar ressenya</string>
+    <string name="your_review">La teva ressenya</string>
+    <string name="no_reviews">Encara no hi ha ressenyes</string>
+    <string name="be_first_review">Sigues el primer a ressenyar aquesta font!</string>
+
+    <!-- Rating Categories -->
+    <string name="taste">Sabor</string>
+    <string name="freshness">Frescor</string>
+    <string name="location">Localització</string>
+    <string name="aesthetics">Estètica</string>
+    <string name="splash">Esquitx</string>
+    <string name="jet">Raig</string>
+    <string name="overall">General</string>
+    <string name="comment">Comentari</string>
+    <string name="comment_optional">Comentari (opcional)</string>
+
+    <!-- Statistics -->
+    <string name="my_stats">Les meves estadístiques</string>
+    <string name="statistics">Estadístiques</string>
+    <string name="fountains_rated">Fonts valorades</string>
+    <string name="average_score">Puntuació mitjana</string>
+    <string name="best_fountain">Millor font</string>
+    <string name="no_ratings_yet">Encara no hi ha valoracions</string>
+
+    <!-- Leaderboard -->
+    <string name="leaderboard">Classificació</string>
+    <string name="rank">Rang</string>
+    <string name="user">Usuari</string>
+    <string name="ratings">Valoracions</string>
+    <string name="score">Puntuació</string>
+    <string name="average">Mitjana</string>
+    <string name="no_leaderboard_data">No hi ha dades de classificació</string>
+
+    <!-- Navigation -->
+    <string name="nav_map">Mapa</string>
+    <string name="nav_stats">Estadístiques</string>
+    <string name="nav_leaderboard">Classificació</string>
+    <string name="nav_profile">Perfil</string>
+
+    <!-- Errors -->
+    <string name="error_loading_fountains">Error en carregar fonts</string>
+    <string name="error_loading_reviews">Error en carregar ressenyes</string>
+    <string name="error_submit_review">Error en enviar ressenya</string>
+    <string name="error_login">Error en iniciar sessió</string>
+    <string name="error_register">Error en registrar-se</string>
+    <string name="error_network">Error de xarxa</string>
+    <string name="error_invalid_input">Entrada no vàlida</string>
+
+    <!-- Success Messages -->
+    <string name="review_submitted">Ressenya enviada correctament!</string>
+    <string name="review_updated">Ressenya actualitzada correctament!</string>
+    <string name="review_deleted">Ressenya eliminada correctament!</string>
+
+    <!-- Validation -->
+    <string name="nickname_required">El sobrenom és obligatori</string>
+    <string name="password_required">La contrasenya és obligatòria</string>
+    <string name="nickname_too_short">El sobrenom ha de tenir almenys 3 caràcters</string>
+    <string name="password_too_short">La contrasenya ha de tenir almenys 6 caràcters</string>
+    <string name="rating_required">Si us plau valora totes les categories</string>
+</resources>
