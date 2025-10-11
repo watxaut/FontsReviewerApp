@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.watxaut.fontsreviewer.domain.model.Fountain
 import com.watxaut.fontsreviewer.domain.model.Review
+import com.watxaut.fontsreviewer.domain.model.User
+import com.watxaut.fontsreviewer.domain.repository.AuthRepository
 import com.watxaut.fontsreviewer.domain.repository.FountainRepository
 import com.watxaut.fontsreviewer.domain.repository.ReviewRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,12 +15,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
 class FountainDetailsViewModel @Inject constructor(
     private val fountainRepository: FountainRepository,
     private val reviewRepository: ReviewRepository,
+    private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -26,10 +30,21 @@ class FountainDetailsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<FountainDetailsUiState>(FountainDetailsUiState.Loading)
     val uiState: StateFlow<FountainDetailsUiState> = _uiState.asStateFlow()
+    
+    private var currentUser: User? = null
 
     init {
+        loadCurrentUser()
         loadFountainDetails()
     }
+    
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            currentUser = authRepository.getCurrentUser()
+        }
+    }
+    
+    fun getCurrentUser(): User? = currentUser
 
     private fun loadFountainDetails() {
         viewModelScope.launch {

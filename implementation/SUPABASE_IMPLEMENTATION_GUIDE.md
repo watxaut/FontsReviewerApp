@@ -240,6 +240,9 @@ LIMIT 100;
 -- =====================================================
 -- VIEW: Fountain Statistics
 -- =====================================================
+-- NOTE: This view is kept for backward compatibility
+-- The main app now uses fountain_stats_detailed which includes
+-- fountain data from the fountains table (added after initial setup)
 CREATE OR REPLACE VIEW fountain_stats AS
 SELECT
   fountain_id,
@@ -259,6 +262,20 @@ GROUP BY fountain_id;
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT SELECT ON leaderboard TO anon, authenticated;
 GRANT SELECT ON fountain_stats TO anon, authenticated;
+
+-- =====================================================
+-- IMPORTANT: Fountains Table Migration
+-- =====================================================
+-- After completing the above setup, you need to:
+-- 1. Create the fountains table (see FOUNTAINS_MIGRATION.sql)
+-- 2. Import the 1745 Barcelona fountains from CSV
+-- 3. The app uses fountain_stats_detailed view which joins
+--    fountains with reviews to provide complete data
+-- 
+-- For detailed instructions, see:
+-- - implementation/FOUNTAINS_MIGRATION.sql
+-- - implementation/IMPORT_FOUNTAINS_GUIDE.md
+-- - implementation/FOUNTAINS_SUPABASE_MIGRATION_SUMMARY.md
 ```
 
 #### 1.3 Set Up Row Level Security (RLS)

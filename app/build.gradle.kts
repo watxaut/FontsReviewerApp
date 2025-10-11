@@ -96,9 +96,6 @@ dependencies {
     implementation(libs.supabase.storage.kt)
     implementation(libs.supabase.realtime.kt) // Optional
 
-    // Ktor client engine for Android
-    implementation(libs.ktor.ktor.client.android)
-
     // Ktor (required by Supabase)
     implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.core)
@@ -126,6 +123,9 @@ dependencies {
 
     // DataStore
     implementation(libs.datastore.preferences)
+    
+    // Google Play Services Location
+    implementation(libs.play.services.location)
 
     // Testing
     testImplementation(libs.junit)

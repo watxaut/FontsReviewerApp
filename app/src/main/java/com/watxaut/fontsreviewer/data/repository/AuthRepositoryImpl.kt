@@ -151,7 +151,8 @@ class AuthRepositoryImpl @Inject constructor(
                 nickname = profile.nickname,
                 totalRatings = profile.totalRatings,
                 averageScore = profile.averageScore,
-                bestFountainId = profile.bestFountainId
+                bestFountainId = profile.bestFountainId,
+                role = com.watxaut.fontsreviewer.domain.model.UserRole.fromString(profile.role)
             )
         } catch (e: Exception) {
             null

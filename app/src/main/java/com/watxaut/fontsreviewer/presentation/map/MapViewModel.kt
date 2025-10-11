@@ -1,5 +1,6 @@
 package com.watxaut.fontsreviewer.presentation.map
 
+import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.watxaut.fontsreviewer.domain.model.Fountain
@@ -24,6 +25,9 @@ class MapViewModel @Inject constructor(
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
     private val _currentUser = MutableStateFlow<com.watxaut.fontsreviewer.domain.model.User?>(null)
+    
+    private val _userLocation = MutableStateFlow<Location?>(null)
+    val userLocation: StateFlow<Location?> = _userLocation.asStateFlow()
 
     init {
         loadCurrentUser()
@@ -40,7 +44,12 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch {
             getFountainsUseCase()
                 .catch { e ->
-                    _uiState.value = MapUiState.Error(e.message ?: "Unknown error")
+                    val errorMessage = when {
+                        e.message?.contains("No internet", ignoreCase = true) == true ->
+                            "No internet connection. Please check your network settings and try again."
+                        else -> e.message ?: "Unknown error"
+                    }
+                    _uiState.value = MapUiState.Error(errorMessage)
                 }
                 .combine(_currentUser) { fountains, user ->
                     if (fountains.isEmpty()) {
@@ -99,6 +108,13 @@ class MapViewModel @Inject constructor(
         loadCurrentUser()
         loadFountains()
     }
+    
+    /**
+     * Update user's current location
+     */
+    fun updateUserLocation(location: Location?) {
+        _userLocation.value = location
+    }
 }
 
 sealed class MapUiState {
@@ -112,3 +128,8 @@ sealed class MapUiState {
     ) : MapUiState()
     data class Error(val message: String) : MapUiState()
 }
+
+data class UserLocationState(
+    val location: Location? = null,
+    val hasPermission: Boolean = false
+)

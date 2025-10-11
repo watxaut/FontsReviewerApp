@@ -1,5 +1,8 @@
 package com.watxaut.fontsreviewer.presentation.details
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,16 +11,25 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.watxaut.fontsreviewer.R
 import com.watxaut.fontsreviewer.domain.model.Review
+import com.watxaut.fontsreviewer.domain.model.UserRole
+import com.watxaut.fontsreviewer.util.LocationUtil
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,9 +41,41 @@ fun FountainDetailsScreen(
     viewModel: FountainDetailsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    
+    var userLocation by remember { mutableStateOf<android.location.Location?>(null) }
+    var showLocationDialog by remember { mutableStateOf(false) }
+    var locationDialogMessage by remember { mutableStateOf("") }
+    
+    // Location permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
+                     permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        
+        if (granted) {
+            scope.launch {
+                userLocation = LocationUtil.getCurrentLocation(context)
+                checkLocationAndNavigate(
+                    uiState = uiState,
+                    userLocation = userLocation,
+                    onAddReview = onAddReview,
+                    onShowDialog = { message ->
+                        locationDialogMessage = message
+                        showLocationDialog = true
+                    }
+                )
+            }
+        } else {
+            locationDialogMessage = "Location permission is required for operators to review fountains within 300m"
+            showLocationDialog = true
+        }
+    }
     
     // Listen for review submission to refresh fountain details
-    androidx.compose.runtime.LaunchedEffect(savedStateHandle) {
+    LaunchedEffect(savedStateHandle) {
         savedStateHandle?.getLiveData<Boolean>("reviewSubmitted")?.observeForever { submitted ->
             if (submitted == true) {
                 viewModel.onRefresh()
@@ -43,9 +87,97 @@ fun FountainDetailsScreen(
     FountainDetailsContent(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
-        onAddReview = onAddReview,
+        onAddReview = {
+            // Check user role and location before allowing review
+            if (uiState is FountainDetailsUiState.Success) {
+                val currentUser = viewModel.getCurrentUser()
+                
+                when {
+                    currentUser == null -> {
+                        locationDialogMessage = "You must be logged in to review fountains"
+                        showLocationDialog = true
+                    }
+                    currentUser.role == UserRole.ADMIN -> {
+                        // Admins can review any fountain
+                        onAddReview()
+                    }
+                    currentUser.role == UserRole.OPERATOR -> {
+                        // Operators need location check
+                        if (!LocationUtil.hasLocationPermission(context)) {
+                            locationPermissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                )
+                            )
+                        } else {
+                            scope.launch {
+                                userLocation = LocationUtil.getCurrentLocation(context)
+                                checkLocationAndNavigate(
+                                    uiState = uiState,
+                                    userLocation = userLocation,
+                                    onAddReview = onAddReview,
+                                    onShowDialog = { message ->
+                                        locationDialogMessage = message
+                                        showLocationDialog = true
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
         onRefresh = viewModel::onRefresh
     )
+    
+    // Location restriction dialog
+    if (showLocationDialog) {
+        AlertDialog(
+            onDismissRequest = { showLocationDialog = false },
+            title = { Text("Location Required") },
+            text = { Text(locationDialogMessage) },
+            confirmButton = {
+                TextButton(onClick = { showLocationDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+}
+
+private fun checkLocationAndNavigate(
+    uiState: FountainDetailsUiState,
+    userLocation: android.location.Location?,
+    onAddReview: () -> Unit,
+    onShowDialog: (String) -> Unit
+) {
+    if (uiState !is FountainDetailsUiState.Success) return
+    
+    if (userLocation == null) {
+        onShowDialog("Unable to get your location. Please make sure location services are enabled.")
+        return
+    }
+    
+    val fountain = uiState.fountain
+    val distance = LocationUtil.calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        fountain.latitude,
+        fountain.longitude
+    )
+    
+    if (distance <= 300.0) {
+        // Within range, allow review
+        onAddReview()
+    } else {
+        // Too far away
+        val distanceKm = distance / 1000.0
+        onShowDialog(
+            "You must be within 300m of this fountain to review it.\n\n" +
+            "Current distance: %.2f km (%.0f meters)".format(distanceKm, distance)
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

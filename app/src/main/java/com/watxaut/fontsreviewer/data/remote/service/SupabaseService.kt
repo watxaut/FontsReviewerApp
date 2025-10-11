@@ -4,6 +4,7 @@ import android.util.Log
 import com.watxaut.fontsreviewer.data.remote.dto.CreateProfileDto
 import com.watxaut.fontsreviewer.data.remote.dto.CreateReviewDto
 import com.watxaut.fontsreviewer.data.remote.dto.FountainStatsDto
+import com.watxaut.fontsreviewer.data.remote.dto.FountainWithStatsDto
 import com.watxaut.fontsreviewer.data.remote.dto.LeaderboardDto
 import com.watxaut.fontsreviewer.data.remote.dto.ProfileDto
 import com.watxaut.fontsreviewer.data.remote.dto.ReviewDto
@@ -360,6 +361,68 @@ class SupabaseService @Inject constructor(
                 .select()
                 .decodeList<FountainStatsDto>()
             Result.success(stats)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // ==================== Fountains ====================
+    
+    /**
+     * Get all fountains with their review statistics using pagination
+     * Fetches in batches of 1000 to work around Supabase max-rows limit
+     */
+    suspend fun getAllFountainsWithStats(): Result<List<FountainWithStatsDto>> {
+        return try {
+            val allFountains = mutableListOf<FountainWithStatsDto>()
+            var offset = 0
+            val batchSize = 1000
+            
+            Log.i(TAG, "Fetching fountains from Supabase in batches...")
+            
+            while (true) {
+                val batch = client.from("fountain_stats_detailed")
+                    .select {
+                        range(offset.toLong(), (offset + batchSize - 1).toLong())
+                    }
+                    .decodeList<FountainWithStatsDto>()
+                
+                if (batch.isEmpty()) {
+                    break
+                }
+                
+                allFountains.addAll(batch)
+                Log.i(TAG, "Fetched batch: ${batch.size} fountains (total so far: ${allFountains.size})")
+                
+                // If we got less than batchSize, we've reached the end
+                if (batch.size < batchSize) {
+                    break
+                }
+                
+                offset += batchSize
+            }
+            
+            Log.i(TAG, "Finished fetching all ${allFountains.size} fountains from Supabase")
+            Result.success(allFountains)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch fountains: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get a single fountain by codi
+     */
+    suspend fun getFountainByCodi(codi: String): Result<FountainWithStatsDto> {
+        return try {
+            val fountain = client.from("fountain_stats_detailed")
+                .select {
+                    filter {
+                        eq("codi", codi)
+                    }
+                }
+                .decodeSingle<FountainWithStatsDto>()
+            Result.success(fountain)
         } catch (e: Exception) {
             Result.failure(e)
         }

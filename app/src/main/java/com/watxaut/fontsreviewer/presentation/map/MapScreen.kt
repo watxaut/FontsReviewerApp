@@ -1,6 +1,11 @@
 package com.watxaut.fontsreviewer.presentation.map
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -8,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mapbox.geojson.Point
+import com.watxaut.fontsreviewer.util.LocationUtil
+import kotlinx.coroutines.launch
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -32,7 +40,48 @@ fun MapScreen(
     viewModel: MapViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val userLocation by viewModel.userLocation.collectAsState()
     var selectedFountainId by remember { mutableStateOf<String?>(null) }
+    
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    
+    // Location permission state
+    var hasLocationPermission by remember {
+        mutableStateOf(LocationUtil.hasLocationPermission(context))
+    }
+    
+    // Location permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasLocationPermission = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true ||
+                               permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        
+        if (hasLocationPermission) {
+            // Get location after permission granted
+            scope.launch {
+                val location = LocationUtil.getCurrentLocation(context)
+                viewModel.updateUserLocation(location)
+            }
+        }
+    }
+    
+    // Request location on first composition if not granted
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
+        } else {
+            // Get current location
+            val location = LocationUtil.getCurrentLocation(context)
+            viewModel.updateUserLocation(location)
+        }
+    }
     
     // Listen for review submission to refresh map data
     LaunchedEffect(savedStateHandle) {
@@ -46,6 +95,7 @@ fun MapScreen(
 
     MapScreenContent(
         uiState = uiState,
+        userLocation = userLocation,
         selectedFountainId = selectedFountainId,
         onFountainClick = { fountainId ->
             selectedFountainId = fountainId
@@ -54,6 +104,12 @@ fun MapScreen(
         onViewDetails = { fountainId ->
             selectedFountainId = null
             onFountainClick(fountainId)
+        },
+        onRefreshLocation = {
+            scope.launch {
+                val location = LocationUtil.getCurrentLocation(context)
+                viewModel.updateUserLocation(location)
+            }
         }
     )
 }
@@ -62,10 +118,12 @@ fun MapScreen(
 @Composable
 fun MapScreenContent(
     uiState: MapUiState,
+    userLocation: android.location.Location?,
     selectedFountainId: String?,
     onFountainClick: (String) -> Unit,
     onDismissSheet: () -> Unit,
-    onViewDetails: (String) -> Unit
+    onViewDetails: (String) -> Unit,
+    onRefreshLocation: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     
@@ -74,75 +132,89 @@ fun MapScreenContent(
             TopAppBar(
                 title = { Text(text = stringResource(R.string.map)) }
             )
+        },
+        floatingActionButton = {
+            // Button to refresh user location
+            FloatingActionButton(
+                onClick = onRefreshLocation,
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MyLocation,
+                    contentDescription = "Refresh location"
+                )
+            }
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when (uiState) {
-                is MapUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+    ) {
+        when (uiState) {
+            is MapUiState.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
 
-                is MapUiState.Empty -> {
+            is MapUiState.Empty -> {
+                Text(
+                    text = stringResource(R.string.error_loading_fountains),
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+
+            is MapUiState.Error -> {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        text = stringResource(R.string.error_loading_fountains),
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyLarge
+                        text = stringResource(R.string.error),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = uiState.message,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
-
-                is MapUiState.Error -> {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = stringResource(R.string.error),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = uiState.message,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
+            }
 
                 is MapUiState.Success -> {
                     MapboxMapView(
                         fountains = uiState.fountains,
                         bestFountainId = uiState.bestFountainId,
                         userBestFountainId = uiState.userBestFountainId,
+                        userLocation = userLocation,
                         onFountainClick = onFountainClick,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
-            }
         }
-        
-        // Bottom sheet for quick actions when fountain is selected
-        if (selectedFountainId != null && uiState is MapUiState.Success) {
-            val selectedFountain = uiState.fountains.find { it.codi == selectedFountainId }
-            selectedFountain?.let { fountain ->
-                ModalBottomSheet(
-                    onDismissRequest = onDismissSheet,
-                    sheetState = sheetState
-                ) {
-                    FountainQuickActionSheet(
-                        fountain = fountain,
-                        isAuthenticated = uiState.currentUser != null,
-                        onViewDetails = { onViewDetails(fountain.codi) },
-                        onDismiss = onDismissSheet
-                    )
-                }
+    }
+    
+    }
+    
+    // Bottom sheet for quick actions when fountain is selected
+    if (selectedFountainId != null && uiState is MapUiState.Success) {
+        val selectedFountain = uiState.fountains.find { it.codi == selectedFountainId }
+        selectedFountain?.let { fountain ->
+            ModalBottomSheet(
+                onDismissRequest = onDismissSheet,
+                sheetState = sheetState
+            ) {
+                FountainQuickActionSheet(
+                    fountain = fountain,
+                    isAuthenticated = uiState.currentUser != null,
+                    onViewDetails = { onViewDetails(fountain.codi) },
+                    onDismiss = onDismissSheet
+                )
             }
         }
     }
@@ -154,6 +226,7 @@ fun MapboxMapView(
     fountains: List<Fountain>,
     bestFountainId: String?,
     userBestFountainId: String?,
+    userLocation: android.location.Location?,
     onFountainClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -261,6 +334,20 @@ fun MapboxMapView(
                     onFountainClick(codi)
                     true
                 }
+            )
+        }
+        
+        // Add user location marker (red circle with white border)
+        if (userLocation != null) {
+            CircleAnnotationGroup(
+                annotations = listOf(
+                    CircleAnnotationOptions()
+                        .withPoint(Point.fromLngLat(userLocation.longitude, userLocation.latitude))
+                        .withCircleRadius(8.0)
+                        .withCircleColor("#FF0000") // Red
+                        .withCircleStrokeColor("#FFFFFF") // White border
+                        .withCircleStrokeWidth(3.0)
+                )
             )
         }
     }

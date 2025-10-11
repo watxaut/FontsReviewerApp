@@ -39,7 +39,6 @@ fun ReviewScreen(
         onAestheticsChange = viewModel::onAestheticsChange,
         onSplashChange = viewModel::onSplashChange,
         onJetChange = viewModel::onJetChange,
-        onCommentChange = viewModel::onCommentChange,
         onSubmit = viewModel::onSubmit
     )
 }
@@ -55,7 +54,6 @@ fun ReviewScreenContent(
     onAestheticsChange: (Float) -> Unit,
     onSplashChange: (Float) -> Unit,
     onJetChange: (Float) -> Unit,
-    onCommentChange: (String) -> Unit,
     onSubmit: () -> Unit
 ) {
     Scaffold(
@@ -160,16 +158,6 @@ fun ReviewScreenContent(
                     }
                 }
             }
-
-            // Comment
-            OutlinedTextField(
-                value = uiState.comment,
-                onValueChange = onCommentChange,
-                label = { Text(stringResource(R.string.comment_optional)) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                maxLines = 5
-            )
 
             // Error message
             if (uiState.errorMessage != null) {

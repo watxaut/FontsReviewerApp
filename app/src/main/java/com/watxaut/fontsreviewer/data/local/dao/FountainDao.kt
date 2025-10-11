@@ -12,6 +12,9 @@ interface FountainDao {
 
     @Query("SELECT * FROM fountains")
     fun getAllFountains(): Flow<List<FountainEntity>>
+    
+    @Query("SELECT * FROM fountains")
+    suspend fun getAllFountainsSync(): List<FountainEntity>
 
     @Query("SELECT * FROM fountains WHERE codi = :codi")
     suspend fun getFountainByCodi(codi: String): FountainEntity?

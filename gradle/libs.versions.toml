@@ -24,6 +24,7 @@ coil = "2.7.0"
 datastore = "1.1.7"
 coroutines = "1.10.2"
 mockk = "1.14.6"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -89,6 +90,9 @@ coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-
 
 # Testing
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+
+# Google Play Services
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

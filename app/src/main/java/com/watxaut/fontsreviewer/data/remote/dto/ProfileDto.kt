@@ -18,7 +18,10 @@ data class ProfileDto(
     val averageScore: Double = 0.0,
 
     @SerialName("best_fountain_id")
-    val bestFountainId: String? = null
+    val bestFountainId: String? = null,
+    
+    @SerialName("role")
+    val role: String = "operator"
 )
 
 @Serializable
