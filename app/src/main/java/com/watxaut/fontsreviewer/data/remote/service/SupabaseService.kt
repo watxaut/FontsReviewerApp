@@ -3,6 +3,7 @@ package com.watxaut.fontsreviewer.data.remote.service
 import android.util.Log
 import com.watxaut.fontsreviewer.data.remote.dto.CreateProfileDto
 import com.watxaut.fontsreviewer.data.remote.dto.CreateReviewDto
+import com.watxaut.fontsreviewer.data.remote.dto.FountainStatsDto
 import com.watxaut.fontsreviewer.data.remote.dto.LeaderboardDto
 import com.watxaut.fontsreviewer.data.remote.dto.ProfileDto
 import com.watxaut.fontsreviewer.data.remote.dto.ReviewDto
@@ -346,6 +347,19 @@ class SupabaseService @Inject constructor(
                 }
                 .decodeList<LeaderboardDto>()
             Result.success(leaderboard)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // ==================== Fountain Statistics ====================
+    
+    suspend fun getAllFountainStats(): Result<List<FountainStatsDto>> {
+        return try {
+            val stats = client.from("fountain_stats")
+                .select()
+                .decodeList<FountainStatsDto>()
+            Result.success(stats)
         } catch (e: Exception) {
             Result.failure(e)
         }

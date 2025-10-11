@@ -180,16 +180,29 @@ fun MapboxMapView(
         val bestFountain = mutableListOf<Pair<Fountain, Int>>()
         val userBestFountain = mutableListOf<Pair<Fountain, Int>>()
         
+        // Debug logging
+        android.util.Log.i("MapScreen", "=== RENDERING MARKERS ===")
+        android.util.Log.i("MapScreen", "bestFountainId: $bestFountainId")
+        android.util.Log.i("MapScreen", "userBestFountainId: $userBestFountainId")
+        
         fountains.forEachIndexed { index, fountain ->
             when {
-                fountain.codi == userBestFountainId && fountain.codi != bestFountainId -> 
+                fountain.codi == userBestFountainId && fountain.codi != bestFountainId -> {
+                    android.util.Log.i("MapScreen", "User best fountain: ${fountain.codi} - ${fountain.nom}")
                     userBestFountain.add(fountain to index)
-                fountain.codi == bestFountainId -> 
+                }
+                fountain.codi == bestFountainId -> {
+                    android.util.Log.i("MapScreen", "Best fountain: ${fountain.codi} - ${fountain.nom}")
                     bestFountain.add(fountain to index)
+                }
                 else -> 
                     regularFountains.add(fountain to index)
             }
         }
+        
+        android.util.Log.i("MapScreen", "Regular fountains: ${regularFountains.size}")
+        android.util.Log.i("MapScreen", "Best fountain markers: ${bestFountain.size}")
+        android.util.Log.i("MapScreen", "User best fountain markers: ${userBestFountain.size}")
         
         // Add regular fountain markers (simple blue circles)
         if (regularFountains.isNotEmpty()) {

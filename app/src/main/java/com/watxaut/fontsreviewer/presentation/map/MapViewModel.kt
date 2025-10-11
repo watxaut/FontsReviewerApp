@@ -55,12 +55,12 @@ class MapViewModel @Inject constructor(
                         val userBestFountainId = user?.bestFountainId
                         
                         // Debug logging
-                        android.util.Log.d("MapViewModel", "=== MAP DATA ===")
-                        android.util.Log.d("MapViewModel", "Total fountains: ${fountains.size}")
-                        android.util.Log.d("MapViewModel", "Fountains with reviews: ${fountains.count { it.totalReviews > 0 }}")
-                        android.util.Log.d("MapViewModel", "Best fountain globally: $bestFountainId")
-                        android.util.Log.d("MapViewModel", "Current user: ${user?.nickname}")
-                        android.util.Log.d("MapViewModel", "User best fountain: $userBestFountainId")
+                        android.util.Log.i("MapViewModel", "=== MAP DATA ===")
+                        android.util.Log.i("MapViewModel", "Total fountains: ${fountains.size}")
+                        android.util.Log.i("MapViewModel", "Fountains with reviews: ${fountains.count { it.totalReviews > 0 }}")
+                        android.util.Log.i("MapViewModel", "Best fountain globally: $bestFountainId")
+                        android.util.Log.i("MapViewModel", "Current user: ${user?.nickname}")
+                        android.util.Log.i("MapViewModel", "User best fountain: $userBestFountainId")
                         
                         // Log top 5 fountains by rating
                         fountains
@@ -68,7 +68,7 @@ class MapViewModel @Inject constructor(
                             .sortedByDescending { it.averageRating }
                             .take(5)
                             .forEachIndexed { index, fountain ->
-                                android.util.Log.d("MapViewModel", "Top ${index + 1}: ${fountain.codi} - ${fountain.nom} (${fountain.averageRating} avg, ${fountain.totalReviews} reviews)")
+                                android.util.Log.i("MapViewModel", "Top ${index + 1}: ${fountain.codi} - ${fountain.nom} (${fountain.averageRating} avg, ${fountain.totalReviews} reviews)")
                             }
                         
                         MapUiState.Success(
