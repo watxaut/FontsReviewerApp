@@ -5,7 +5,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +39,7 @@ import com.watxaut.fontsreviewer.domain.model.Fountain
 @Composable
 fun MapScreen(
     onFountainClick: (String) -> Unit = {},
+    onAddFountain: () -> Unit = {},
     savedStateHandle: androidx.lifecycle.SavedStateHandle? = null,
     viewModel: MapViewModel = hiltViewModel()
 ) {
@@ -84,12 +88,19 @@ fun MapScreen(
         }
     }
     
-    // Listen for review submission to refresh map data
+    // Listen for review submission or fountain addition to refresh map data
     LaunchedEffect(savedStateHandle) {
         savedStateHandle?.getLiveData<Boolean>("reviewSubmitted")?.observeForever { submitted ->
             if (submitted == true) {
                 viewModel.refresh()
                 savedStateHandle.set("reviewSubmitted", false)
+            }
+        }
+        
+        savedStateHandle?.getLiveData<Boolean>("fountainAdded")?.observeForever { added ->
+            if (added == true) {
+                viewModel.refresh()
+                savedStateHandle.set("fountainAdded", false)
             }
         }
     }
@@ -115,7 +126,8 @@ fun MapScreen(
         },
         onToggleDeletedFountains = {
             viewModel.toggleShowDeletedFountains()
-        }
+        },
+        onAddFountain = onAddFountain
     )
 }
 
@@ -130,7 +142,8 @@ fun MapScreenContent(
     onDismissSheet: () -> Unit,
     onViewDetails: (String) -> Unit,
     onRefreshLocation: () -> Unit,
-    onToggleDeletedFountains: () -> Unit
+    onToggleDeletedFountains: () -> Unit,
+    onAddFountain: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     
@@ -181,6 +194,7 @@ fun MapScreenContent(
                     showDeletedFountains = showDeletedFountains,
                     onFountainClick = onFountainClick,
                     onToggleDeletedFountains = onToggleDeletedFountains,
+                    onAddFountain = onAddFountain,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -218,6 +232,7 @@ fun MapboxMapView(
     showDeletedFountains: Boolean,
     onFountainClick: (String) -> Unit,
     onToggleDeletedFountains: () -> Unit,
+    onAddFountain: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Barcelona center coordinates
@@ -393,30 +408,110 @@ fun MapboxMapView(
         }
         }
         
-        // Location button - floating action button to center on user
-        if (userLocation != null) {
-            FloatingActionButton(
-                onClick = {
-                    // Center the map on user location
-                    mapViewportState.flyTo(
-                        cameraOptions = com.mapbox.maps.CameraOptions.Builder()
-                            .center(Point.fromLngLat(userLocation.longitude, userLocation.latitude))
-                            .zoom(16.0) // Closer zoom when centering on user
-                            .build()
+        // DEBUG: Show user info (TEMPORARY - REMOVE AFTER TESTING)
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(16.dp)
+                .padding(top = 80.dp)
+        ) {
+            Text(
+                text = "DEBUG INFO:",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = "User: ${currentUser?.nickname ?: "NULL"}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = "Role: ${currentUser?.role ?: "NULL"}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            Text(
+                text = "Is Admin: ${currentUser?.role == com.watxaut.fontsreviewer.domain.model.UserRole.ADMIN}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+        
+        // Admin controls column (bottom-right, above bottom nav)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .padding(bottom = 80.dp), // Extra padding to avoid bottom nav
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            // Admin buttons - only show if user is admin
+            if (currentUser?.role == com.watxaut.fontsreviewer.domain.model.UserRole.ADMIN) {
+                // Add fountain button
+                FloatingActionButton(
+                    onClick = onAddFountain,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add new fountain",
+                        modifier = Modifier.size(24.dp)
                     )
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .padding(bottom = 80.dp), // Extra padding to avoid bottom nav
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MyLocation,
-                    contentDescription = stringResource(R.string.center_on_location),
-                    modifier = Modifier.size(24.dp)
-                )
+                }
+                
+                // Toggle deleted fountains visibility button
+                FloatingActionButton(
+                    onClick = onToggleDeletedFountains,
+                    containerColor = if (showDeletedFountains) {
+                        MaterialTheme.colorScheme.errorContainer
+                    } else {
+                        MaterialTheme.colorScheme.secondaryContainer
+                    },
+                    contentColor = if (showDeletedFountains) {
+                        MaterialTheme.colorScheme.onErrorContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (showDeletedFountains) {
+                            androidx.compose.material.icons.Icons.Default.VisibilityOff
+                        } else {
+                            androidx.compose.material.icons.Icons.Default.Visibility
+                        },
+                        contentDescription = if (showDeletedFountains) {
+                            "Hide deleted fountains"
+                        } else {
+                            "Show deleted fountains"
+                        },
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            
+            // Location button - floating action button to center on user
+            if (userLocation != null) {
+                FloatingActionButton(
+                    onClick = {
+                        // Center the map on user location
+                        mapViewportState.flyTo(
+                            cameraOptions = com.mapbox.maps.CameraOptions.Builder()
+                                .center(Point.fromLngLat(userLocation.longitude, userLocation.latitude))
+                                .zoom(16.0) // Closer zoom when centering on user
+                                .build()
+                        )
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = stringResource(R.string.center_on_location),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }

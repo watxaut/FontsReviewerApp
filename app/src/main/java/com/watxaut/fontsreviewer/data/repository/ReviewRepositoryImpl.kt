@@ -161,4 +161,19 @@ class ReviewRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun getUserReviewedFountainIds(userId: String): Result<Set<String>> {
+        return try {
+            val result = supabaseService.getUserReviewedFountainIds(userId)
+            
+            if (result.isSuccess) {
+                val fountainIds = result.getOrNull()?.toSet() ?: emptySet()
+                Result.success(fountainIds)
+            } else {
+                Result.failure(result.exceptionOrNull() ?: Exception("Failed to get reviewed fountain IDs"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

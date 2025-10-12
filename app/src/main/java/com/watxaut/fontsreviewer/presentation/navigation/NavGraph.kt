@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.watxaut.fontsreviewer.presentation.addfountain.AddFountainScreen
 import com.watxaut.fontsreviewer.presentation.auth.login.LoginScreen
 import com.watxaut.fontsreviewer.presentation.auth.register.RegisterScreen
 import com.watxaut.fontsreviewer.presentation.details.FountainDetailsScreen
@@ -62,7 +63,22 @@ fun NavGraph(
                 onFountainClick = { fountainId ->
                     navController.navigate(Screen.FountainDetails.createRoute(fountainId))
                 },
+                onAddFountain = {
+                    navController.navigate(Screen.AddFountain.route)
+                },
                 savedStateHandle = backStackEntry.savedStateHandle
+            )
+        }
+        
+        composable(Screen.AddFountain.route) {
+            AddFountainScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onFountainAdded = {
+                    // Refresh map data by setting a flag
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("fountainAdded", true)
+                }
             )
         }
 

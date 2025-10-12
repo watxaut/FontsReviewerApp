@@ -116,4 +116,14 @@
     <string name="location_selected">Location selected</string>
     <string name="create">Create</string>
     <string name="field_required">This field is required</string>
+    <string name="back">Back</string>
+    <string name="confirm">Confirm</string>
+    <string name="add_fountain_title">Add New Fountain</string>
+    <string name="add_fountain_instructions">Fill in the fountain details and tap the location icon to select its position on the map.</string>
+    <string name="street">Street</string>
+    <string name="pick_location">Pick Location</string>
+    <string name="location_not_set">Location not set (tap to select)</string>
+    <string name="coordinates_format">Lat: %.6f, Lng: %.6f</string>
+    <string name="pick_location_on_map">Pick Location on Map</string>
+    <string name="selected_location">Selected Location</string>
 </resources>

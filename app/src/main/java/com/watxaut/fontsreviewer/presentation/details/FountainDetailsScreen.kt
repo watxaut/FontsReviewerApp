@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.watxaut.fontsreviewer.R
 import com.watxaut.fontsreviewer.domain.model.Review
+import com.watxaut.fontsreviewer.domain.model.User
 import com.watxaut.fontsreviewer.domain.model.UserRole
 import com.watxaut.fontsreviewer.util.LocationUtil
 import kotlinx.coroutines.launch
@@ -47,6 +49,7 @@ fun FountainDetailsScreen(
     var userLocation by remember { mutableStateOf<android.location.Location?>(null) }
     var showLocationDialog by remember { mutableStateOf(false) }
     var locationDialogMessage by remember { mutableStateOf("") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     // Location permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -86,7 +89,9 @@ fun FountainDetailsScreen(
 
     FountainDetailsContent(
         uiState = uiState,
+        currentUser = viewModel.getCurrentUser(),
         onNavigateBack = onNavigateBack,
+        onDeleteFountain = { showDeleteDialog = true },
         onAddReview = {
             // Check user role and location before allowing review
             val successState = uiState as? FountainDetailsUiState.Success
@@ -152,6 +157,45 @@ fun FountainDetailsScreen(
             }
         )
     }
+    
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        val fountainName = (uiState as? FountainDetailsUiState.Success)?.fountain?.nom ?: ""
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.delete_confirmation)) },
+            text = { 
+                Text(stringResource(R.string.confirm_delete_fountain_message) + "\n\nFountain: $fountainName")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteFountain(
+                            onSuccess = {
+                                // Navigate back to map
+                                onNavigateBack()
+                            },
+                            onError = { error ->
+                                locationDialogMessage = error
+                                showLocationDialog = true
+                            }
+                        )
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }
 
 private fun checkLocationAndNavigate(
@@ -192,10 +236,15 @@ private fun checkLocationAndNavigate(
 @Composable
 fun FountainDetailsContent(
     uiState: FountainDetailsUiState,
+    currentUser: User?,
     onNavigateBack: () -> Unit,
+    onDeleteFountain: () -> Unit,
     onAddReview: () -> Unit,
     onRefresh: () -> Unit
 ) {
+    val isAdmin = currentUser?.role == UserRole.ADMIN
+    val isDeleting = (uiState as? FountainDetailsUiState.Success)?.isDeleting == true
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -206,6 +255,28 @@ fun FountainDetailsContent(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    // Delete button for admins only
+                    if (isAdmin) {
+                        IconButton(
+                            onClick = onDeleteFountain,
+                            enabled = !isDeleting
+                        ) {
+                            if (isDeleting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.delete_fountain),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
                     }
                 }
             )

@@ -119,7 +119,13 @@ class FountainRepositoryImpl @Inject constructor(
     }
 
     
-    override suspend fun createFountain(fountain: com.watxaut.fontsreviewer.domain.model.CreateFountainRequest): Result<String> {
+    override suspend fun createFountain(
+        nom: String,
+        carrer: String,
+        numeroCarrer: String,
+        latitude: Double,
+        longitude: Double
+    ): Result<String> {
         return try {
             // Check internet connectivity
             if (!NetworkUtil.isNetworkAvailable(context)) {
@@ -127,13 +133,13 @@ class FountainRepositoryImpl @Inject constructor(
                 return Result.failure(NoInternetException("No internet connection. Please check your network settings."))
             }
             
-            // Convert domain model to DTO
+            // Convert to DTO
             val fountainDto = com.watxaut.fontsreviewer.data.remote.dto.CreateFountainDto(
-                nom = fountain.nom,
-                carrer = fountain.carrer,
-                numeroCarrer = fountain.numeroCarrer,
-                latitude = fountain.latitude,
-                longitude = fountain.longitude
+                nom = nom,
+                carrer = carrer,
+                numeroCarrer = numeroCarrer,
+                latitude = latitude,
+                longitude = longitude
             )
             
             // Call Supabase service

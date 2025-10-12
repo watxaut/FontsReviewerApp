@@ -143,14 +143,29 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentUser(): User? {
         return try {
-            val userId = supabaseService.getCurrentUserId() ?: return null
+            android.util.Log.e(TAG, "DEBUG: getCurrentUser() called")
+            val userId = supabaseService.getCurrentUserId()
+            android.util.Log.e(TAG, "DEBUG: getCurrentUserId() = $userId")
+            if (userId == null) {
+                android.util.Log.e(TAG, "DEBUG: No user ID - user not logged in")
+                return null
+            }
 
             val profileResult = supabaseService.getProfile(userId)
-            if (profileResult.isFailure) return null
+            android.util.Log.e(TAG, "DEBUG: getProfile result = ${profileResult.isSuccess}")
+            if (profileResult.isFailure) {
+                android.util.Log.e(TAG, "DEBUG: getProfile failed: ${profileResult.exceptionOrNull()?.message}")
+                return null
+            }
 
-            val profile = profileResult.getOrNull() ?: return null
+            val profile = profileResult.getOrNull()
+            android.util.Log.e(TAG, "DEBUG: Profile = $profile")
+            if (profile == null) {
+                android.util.Log.e(TAG, "DEBUG: Profile is null")
+                return null
+            }
 
-            User(
+            val user = User(
                 id = profile.id,
                 nickname = profile.nickname,
                 totalRatings = profile.totalRatings,
@@ -158,7 +173,11 @@ class AuthRepositoryImpl @Inject constructor(
                 bestFountainId = profile.bestFountainId,
                 role = com.watxaut.fontsreviewer.domain.model.UserRole.fromString(profile.role)
             )
+            android.util.Log.e(TAG, "DEBUG: Created User object: $user")
+            android.util.Log.e(TAG, "DEBUG: User role enum: ${user.role}")
+            user
         } catch (e: Exception) {
+            android.util.Log.e(TAG, "DEBUG: Exception in getCurrentUser: ${e.message}", e)
             null
         }
     }

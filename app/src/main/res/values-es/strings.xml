@@ -116,4 +116,15 @@
     <string name="location_selected">Ubicación seleccionada</string>
     <string name="create">Crear</string>
     <string name="field_required">Este campo es obligatorio</string>
+    <string name="back">Atrás</string>
+    <string name="confirm">Confirmar</string>
+    <string name="add_fountain_title">Añadir Nueva Fuente</string>
+    <string name="add_fountain_instructions">Rellena los detalles de la fuente y toca el icono de ubicación para seleccionar su posición en el mapa.</string>
+    <string name="street">Calle</string>
+    <string name="pick_location">Elegir Ubicación</string>
+    <string name="location_not_set">Ubicación no establecida (toca para seleccionar)</string>
+    <string name="coordinates_format">Lat: %.6f, Lng: %.6f</string>
+    <string name="pick_location_on_map">Elegir Ubicación en el Mapa</string>
+    <string name="selected_location">Ubicación Seleccionada</string>
 </resources>
+

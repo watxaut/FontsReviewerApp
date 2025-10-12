@@ -116,4 +116,14 @@
     <string name="location_selected">Ubicació seleccionada</string>
     <string name="create">Crear</string>
     <string name="field_required">Aquest camp és obligatori</string>
+    <string name="back">Enrere</string>
+    <string name="confirm">Confirmar</string>
+    <string name="add_fountain_title">Afegir Nova Font</string>
+    <string name="add_fountain_instructions">Omple els detalls de la font i toca la icona d\'ubicació per seleccionar la seva posició al mapa.</string>
+    <string name="street">Carrer</string>
+    <string name="pick_location">Triar Ubicació</string>
+    <string name="location_not_set">Ubicació no establerta (toca per seleccionar)</string>
+    <string name="coordinates_format">Lat: %.6f, Lng: %.6f</string>
+    <string name="pick_location_on_map">Triar Ubicació al Mapa</string>
+    <string name="selected_location">Ubicació Seleccionada</string>
 </resources>

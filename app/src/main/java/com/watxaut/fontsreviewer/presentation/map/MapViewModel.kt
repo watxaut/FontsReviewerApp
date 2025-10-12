@@ -6,7 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.watxaut.fontsreviewer.domain.model.Fountain
 import com.watxaut.fontsreviewer.domain.repository.AuthRepository
 import com.watxaut.fontsreviewer.domain.usecase.GetFountainsUseCase
+import com.watxaut.fontsreviewer.domain.usecase.GetUserReviewedFountainsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +23,8 @@ import javax.inject.Inject
 class MapViewModel @Inject constructor(
     private val getFountainsUseCase: GetFountainsUseCase,
     private val authRepository: AuthRepository,
-    private val supabaseService: com.watxaut.fontsreviewer.data.remote.service.SupabaseService
+    private val getUserReviewedFountainsUseCase: GetUserReviewedFountainsUseCase,
+    private val supabaseClient: SupabaseClient
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MapUiState>(MapUiState.Loading)
@@ -34,13 +39,43 @@ class MapViewModel @Inject constructor(
     val showDeletedFountains: StateFlow<Boolean> = _showDeletedFountains.asStateFlow()
 
     init {
+        // Listen to Supabase session status changes
+        listenToSessionChanges()
         loadCurrentUser()
         loadFountains()
     }
     
+    private fun listenToSessionChanges() {
+        viewModelScope.launch {
+            supabaseClient.auth.sessionStatus.collect { status: SessionStatus ->
+                android.util.Log.e("MapViewModel", "Session status changed: $status")
+                when (status) {
+                    is SessionStatus.Authenticated -> {
+                        android.util.Log.e("MapViewModel", "User authenticated! Source: ${status.source}")
+                        // Reload user when session changes
+                        loadCurrentUser()
+                        loadFountains()
+                    }
+                    is SessionStatus.NotAuthenticated -> {
+                        android.util.Log.e("MapViewModel", "User not authenticated")
+                        _currentUser.value = null
+                        loadFountains()
+                    }
+                    else -> {
+                        android.util.Log.e("MapViewModel", "Session status: $status")
+                    }
+                }
+            }
+        }
+    }
+    
     private fun loadCurrentUser() {
         viewModelScope.launch {
-            _currentUser.value = authRepository.getCurrentUser()
+            val user = authRepository.getCurrentUser()
+            android.util.Log.e("MapViewModel", "DEBUG: loadCurrentUser() called")
+            android.util.Log.e("MapViewModel", "DEBUG: User from authRepository = $user")
+            android.util.Log.e("MapViewModel", "DEBUG: User role = ${user?.role}")
+            _currentUser.value = user
         }
     }
 
@@ -69,9 +104,8 @@ class MapViewModel @Inject constructor(
                         
                         // Get user's reviewed fountain IDs
                         val userReviewedIds = if (user != null) {
-                            supabaseService.getUserReviewedFountainIds(user.id)
+                            getUserReviewedFountainsUseCase(user.id)
                                 .getOrNull()
-                                ?.toSet()
                                 ?: emptySet()
                         } else {
                             emptySet()

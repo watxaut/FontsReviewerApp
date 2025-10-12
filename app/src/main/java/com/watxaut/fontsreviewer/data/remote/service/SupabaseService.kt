@@ -462,7 +462,8 @@ class SupabaseService @Inject constructor(
     
     /**
      * Get all fountains INCLUDING deleted ones (admin only)
-     * Fetches from the fountains table directly, not the view
+     * Fetches from the fountains table directly with basic info
+     * For deleted fountains, stats are set to 0 since they shouldn't show stats
      */
     suspend fun getAllFountainsIncludingDeleted(): Result<List<FountainWithStatsDto>> {
         return try {
@@ -473,18 +474,9 @@ class SupabaseService @Inject constructor(
             SecureLog.i(TAG, "Fetching ALL fountains (including deleted) from Supabase...")
             
             while (true) {
+                // Fetch basic fountain data
                 val batch = client.from("fountains")
-                    .select(Columns.raw("""
-                        codi,
-                        nom,
-                        carrer,
-                        numero_carrer,
-                        latitude,
-                        longitude,
-                        is_deleted,
-                        total_reviews:reviews(count),
-                        average_rating:reviews.overall.avg()
-                    """)) {
+                    .select {
                         range(offset.toLong(), (offset + batchSize - 1).toLong())
                     }
                     .decodeList<FountainWithStatsDto>()
@@ -539,19 +531,19 @@ class SupabaseService @Inject constructor(
             // Generate a unique fountain code
             val fountainCode = generateFountainCode()
             
-            // Create fountain with generated code
-            val fountainData = mapOf(
-                "codi" to fountainCode,
-                "nom" to fountain.nom,
-                "carrer" to fountain.carrer,
-                "numero_carrer" to fountain.numeroCarrer,
-                "latitude" to fountain.latitude,
-                "longitude" to fountain.longitude,
-                "is_deleted" to false
+            // Create fountain DTO with all fields including generated code
+            val insertDto = com.watxaut.fontsreviewer.data.remote.dto.InsertFountainDto(
+                codi = fountainCode,
+                nom = fountain.nom,
+                carrer = fountain.carrer,
+                numeroCarrer = fountain.numeroCarrer,
+                latitude = fountain.latitude,
+                longitude = fountain.longitude,
+                isDeleted = false
             )
             
             client.from("fountains")
-                .insert(fountainData)
+                .insert(insertDto)
             
             SecureLog.d(TAG, "createFountain() success, code: $fountainCode")
             Result.success(fountainCode)

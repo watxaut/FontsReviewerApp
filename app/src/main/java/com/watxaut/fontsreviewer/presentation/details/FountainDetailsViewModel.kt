@@ -9,6 +9,7 @@ import com.watxaut.fontsreviewer.domain.model.User
 import com.watxaut.fontsreviewer.domain.repository.AuthRepository
 import com.watxaut.fontsreviewer.domain.repository.FountainRepository
 import com.watxaut.fontsreviewer.domain.repository.ReviewRepository
+import com.watxaut.fontsreviewer.domain.usecase.DeleteFountainUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ class FountainDetailsViewModel @Inject constructor(
     private val fountainRepository: FountainRepository,
     private val reviewRepository: ReviewRepository,
     private val authRepository: AuthRepository,
+    private val deleteFountainUseCase: DeleteFountainUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -97,6 +99,33 @@ class FountainDetailsViewModel @Inject constructor(
     fun onRefresh() {
         loadFountainDetails()
     }
+    
+    fun deleteFountain(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            _uiState.update { currentState ->
+                if (currentState is FountainDetailsUiState.Success) {
+                    currentState.copy(isDeleting = true)
+                } else {
+                    currentState
+                }
+            }
+            
+            deleteFountainUseCase(fountainId)
+                .onSuccess {
+                    onSuccess()
+                }
+                .onFailure { error ->
+                    _uiState.update { currentState ->
+                        if (currentState is FountainDetailsUiState.Success) {
+                            currentState.copy(isDeleting = false)
+                        } else {
+                            currentState
+                        }
+                    }
+                    onError(error.message ?: "Failed to delete fountain")
+                }
+        }
+    }
 }
 
 sealed class FountainDetailsUiState {
@@ -105,7 +134,8 @@ sealed class FountainDetailsUiState {
         val fountain: Fountain,
         val reviews: List<Review>,
         val reviewsError: String? = null,
-        val userHasReviewed: Boolean = false
+        val userHasReviewed: Boolean = false,
+        val isDeleting: Boolean = false
     ) : FountainDetailsUiState()
     data class Error(val message: String) : FountainDetailsUiState()
 }

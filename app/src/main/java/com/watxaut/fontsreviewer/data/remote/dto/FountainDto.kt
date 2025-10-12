@@ -74,3 +74,27 @@ data class CreateFountainDto(
     @SerialName("longitude")
     val longitude: Double
 )
+
+@Serializable
+data class InsertFountainDto(
+    @SerialName("codi")
+    val codi: String,
+    
+    @SerialName("nom")
+    val nom: String,
+    
+    @SerialName("carrer")
+    val carrer: String,
+    
+    @SerialName("numero_carrer")
+    val numeroCarrer: String,
+    
+    @SerialName("latitude")
+    val latitude: Double,
+    
+    @SerialName("longitude")
+    val longitude: Double,
+    
+    @SerialName("is_deleted")
+    val isDeleted: Boolean = false
+)

@@ -13,4 +13,5 @@ interface ReviewRepository {
     suspend fun deleteReview(reviewId: String): Result<Unit>
     suspend fun getUserStats(userId: String): Result<UserStats>
     suspend fun getLeaderboard(limit: Int = 100): Result<List<LeaderboardEntry>>
+    suspend fun getUserReviewedFountainIds(userId: String): Result<Set<String>>
 }
