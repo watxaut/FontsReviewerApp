@@ -115,10 +115,10 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
-    // Room Database
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
+    // Room Database - REMOVED (using Supabase only)
+    // implementation(libs.room.runtime)
+    // implementation(libs.room.ktx)
+    // ksp(libs.room.compiler)
 
     // Supabase BOM - ensures all modules use compatible versions
     implementation(platform(libs.supabase.bom))

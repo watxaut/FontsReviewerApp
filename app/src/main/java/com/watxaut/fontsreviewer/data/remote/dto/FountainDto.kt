@@ -21,7 +21,10 @@ data class FountainDto(
     val latitude: Double,
     
     @SerialName("longitude")
-    val longitude: Double
+    val longitude: Double,
+    
+    @SerialName("is_deleted")
+    val isDeleted: Boolean = false
 )
 
 @Serializable
@@ -48,5 +51,26 @@ data class FountainWithStatsDto(
     val totalReviews: Int = 0,
     
     @SerialName("average_rating")
-    val averageRating: Double = 0.0
+    val averageRating: Double = 0.0,
+    
+    @SerialName("is_deleted")
+    val isDeleted: Boolean = false
+)
+
+@Serializable
+data class CreateFountainDto(
+    @SerialName("nom")
+    val nom: String,
+    
+    @SerialName("carrer")
+    val carrer: String,
+    
+    @SerialName("numero_carrer")
+    val numeroCarrer: String,
+    
+    @SerialName("latitude")
+    val latitude: Double,
+    
+    @SerialName("longitude")
+    val longitude: Double
 )

@@ -92,4 +92,28 @@
     <string name="nickname_too_short">El sobrenom ha de tenir almenys 3 caràcters</string>
     <string name="password_too_short">La contrasenya ha de tenir almenys 6 caràcters</string>
     <string name="rating_required">Si us plau valora totes les categories</string>
+    
+    <!-- Admin Features -->
+    <string name="create_fountain">Crear Font</string>
+    <string name="add_fountain">Afegir Font</string>
+    <string name="delete_fountain">Eliminar Font</string>
+    <string name="fountain_name">Nom de la Font</string>
+    <string name="street_name">Nom del Carrer</string>
+    <string name="street_number">Número de Carrer</string>
+    <string name="select_location_on_map">Seleccionar ubicació al mapa</string>
+    <string name="coordinates">Coordenades</string>
+    <string name="latitude">Latitud</string>
+    <string name="longitude">Longitud</string>
+    <string name="fountain_created">Font creada amb èxit!</string>
+    <string name="fountain_deleted">Font eliminada amb èxit!</string>
+    <string name="error_creating_fountain">Error en crear la font</string>
+    <string name="error_deleting_fountain">Error en eliminar la font</string>
+    <string name="confirm_delete_fountain">Estàs segur que vols eliminar aquesta font?</string>
+    <string name="confirm_delete_fountain_message">Aquesta acció no es pot desfer. La font ja no serà visible per als usuaris.</string>
+    <string name="delete_confirmation">Confirmar Eliminació</string>
+    <string name="admin_only">Només Administradors</string>
+    <string name="tap_map_to_select_location">Toca el mapa per seleccionar la ubicació de la font</string>
+    <string name="location_selected">Ubicació seleccionada</string>
+    <string name="create">Crear</string>
+    <string name="field_required">Aquest camp és obligatori</string>
 </resources>

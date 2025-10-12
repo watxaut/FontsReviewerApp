@@ -12,6 +12,7 @@ fun FountainWithStatsDto.toDomain(): Fountain {
         latitude = latitude,
         longitude = longitude,
         averageRating = averageRating,
-        totalReviews = totalReviews
+        totalReviews = totalReviews,
+        isDeleted = isDeleted
     )
 }

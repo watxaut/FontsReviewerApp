@@ -29,6 +29,9 @@ class MapViewModel @Inject constructor(
     
     private val _userLocation = MutableStateFlow<Location?>(null)
     val userLocation: StateFlow<Location?> = _userLocation.asStateFlow()
+    
+    private val _showDeletedFountains = MutableStateFlow(false)
+    val showDeletedFountains: StateFlow<Boolean> = _showDeletedFountains.asStateFlow()
 
     init {
         loadCurrentUser()
@@ -43,7 +46,7 @@ class MapViewModel @Inject constructor(
 
     private fun loadFountains() {
         viewModelScope.launch {
-            getFountainsUseCase()
+            getFountainsUseCase(includeDeleted = _showDeletedFountains.value)
                 .catch { e ->
                     val errorMessage = when {
                         e.message?.contains("No internet", ignoreCase = true) == true ->
@@ -109,6 +112,14 @@ class MapViewModel @Inject constructor(
      */
     fun updateUserLocation(location: Location?) {
         _userLocation.value = location
+    }
+    
+    /**
+     * Toggle showing deleted fountains (admin only)
+     */
+    fun toggleShowDeletedFountains() {
+        _showDeletedFountains.value = !_showDeletedFountains.value
+        loadFountains() // Reload fountains with new filter
     }
 }
 

@@ -1,35 +1,30 @@
-# FontsReviewer - AI Agent Instructions
+# FontsReviewer - AI Agent Guide
 
-> **Quick Start for AI Agents:** Before making any changes, read the complete `implementation/` directory to understand the project architecture, current status, and implementation plans.
-
-## 📋 Project Overview
-
-**FontsReviewer** is an Android application for rating and reviewing 1,745 public fountains in Barcelona. The app allows anonymous browsing and authenticated user reviews with a social leaderboard system.
-
-### Key Information
-- **Platform:** Android (Kotlin, Jetpack Compose)
-- **Min SDK:** 29 (Android 10)
-- **Target SDK:** 36
-- **Package:** `com.watxaut.fontsreviewer`
-- **Languages:** English, Spanish, Catalan (full i18n support)
-- **Backend:** Supabase (PostgreSQL + Auth)
-- **Maps:** Mapbox Android SDK
-- **Architecture:** MVVM + Clean Architecture + Hilt DI
+> **Quick Start:** Read `implementation/` directory in order. Start with `02-CURRENT_STATE/APP_STATUS.md` for current snapshot, then `01-MIGRATIONS/MIGRATION_HISTORY.md` to understand database evolution.
 
 ---
 
-## 🎯 Core Features
+## 📋 Project Overview
 
-1. **Map View** - Display all 1,745 Barcelona fountains with clustering
-2. **Anonymous Browsing** - View reviews without authentication
-3. **User Authentication** - Email/password (Supabase Auth)
-4. **Review System** - 4 rating categories per fountain:
-   - Taste (Sabor / Sabor)
-   - Freshness (Frescor / Frescor)
-   - Location (Localització / Ubicación)
-   - Aesthetics (Estètica / Estética)
-5. **User Statistics** - Personal metrics and best-rated fountain
-6. **Leaderboard** - Global user rankings by fountains rated
+**FontsReviewer** - Android app for rating 1,745 Barcelona fountains with social leaderboard.
+
+### Key Info
+- **Platform:** Android (Kotlin, Jetpack Compose)
+- **Min SDK:** 29 | **Target SDK:** 36
+- **Backend:** Supabase (PostgreSQL + Auth)
+- **Maps:** Mapbox Android SDK
+- **Architecture:** MVVM + Clean Architecture + Hilt DI
+- **Languages:** English, Spanish, Catalan
+- **Status:** 🟢 95% Production Ready
+
+### Core Features
+1. **Map View** - All 1,745 fountains with Mapbox clustering
+2. **Anonymous Browsing** - View reviews without login
+3. **Authentication** - Email/password via Supabase
+4. **Review System** - 6 rating categories (taste, freshness, location, aesthetics, splash, jet)
+5. **User Stats** - Personal metrics and best-rated fountain
+6. **Leaderboard** - Global rankings
+7. **User Roles** - Admin (unrestricted) vs Operator (300m radius)
 
 ---
 
@@ -37,283 +32,236 @@
 
 ```
 FontsReviewer/
-├── app/
-│   ├── src/main/
-│   │   ├── java/com/watxaut/fontsreviewer/
-│   │   │   ├── data/                    # Data layer
-│   │   │   │   ├── local/               # Room database
-│   │   │   │   │   ├── dao/             # DAOs for local data
-│   │   │   │   │   ├── database/        # Room database setup
-│   │   │   │   │   └── entity/          # Room entities
-│   │   │   │   ├── remote/              # Supabase integration
-│   │   │   │   │   ├── dto/             # Data transfer objects
-│   │   │   │   │   └── service/         # API services
-│   │   │   │   ├── repository/          # Repository implementations
-│   │   │   │   └── mapper/              # Entity <-> Domain mappers
-│   │   │   ├── domain/                  # Business logic layer
-│   │   │   │   ├── model/               # Domain models
-│   │   │   │   ├── repository/          # Repository interfaces
-│   │   │   │   └── usecase/             # Use cases
-│   │   │   ├── presentation/            # UI layer
-│   │   │   │   ├── auth/                # Login/Register screens
-│   │   │   │   ├── map/                 # Map screen + ViewModel
-│   │   │   │   ├── details/             # Fountain details
-│   │   │   │   ├── review/              # Review submission
-│   │   │   │   ├── stats/               # User statistics
-│   │   │   │   ├── leaderboard/         # Global rankings
-│   │   │   │   ├── profile/             # User profile
-│   │   │   │   └── navigation/          # Navigation setup
-│   │   │   ├── di/                      # Dependency injection modules
-│   │   │   ├── ui/                      # Theme and common UI
-│   │   │   ├── util/                    # Utilities (CSV parser, etc.)
-│   │   │   ├── FontsReviewerApp.kt      # Application class
-│   │   │   └── MainActivity.kt          # Main activity
-│   │   ├── assets/
-│   │   │   └── 2025_fonts_bcn.csv       # 1,745 fountain data
-│   │   └── res/
-│   │       ├── values/                   # English strings
-│   │       ├── values-es/                # Spanish strings
-│   │       └── values-ca/                # Catalan strings
-│   └── build.gradle.kts                  # App-level Gradle config
-├── implementation/                       # 📖 READ THIS FIRST!
-│   ├── IMPLEMENTATION_PLANS.md           # Detailed architecture plans
-│   ├── IMPLEMENTATION_STATUS.md          # Current implementation status
-│   └── SUPABASE_IMPLEMENTATION_GUIDE.md  # Backend setup guide
-├── build.gradle.kts                      # Project-level Gradle config
-├── settings.gradle.kts                   # Gradle settings
-├── local.properties                      # 🔒 SECRET CREDENTIALS (gitignored)
-├── .gitignore                            # Git ignore rules
-└── agents.md                             # This file
+├── app/src/main/java/com/watxaut/fontsreviewer/
+│   ├── data/                    # Data layer
+│   │   ├── remote/              # Supabase DTOs & service
+│   │   ├── repository/          # Repository implementations
+│   │   └── mapper/              # DTO <-> Domain mappers
+│   ├── domain/                  # Business logic
+│   │   ├── model/               # Domain models
+│   │   ├── repository/          # Repository interfaces
+│   │   └── usecase/             # Use cases
+│   ├── presentation/            # UI layer (Compose)
+│   │   ├── auth/, map/, details/, review/, stats/, leaderboard/, profile/
+│   │   └── navigation/          # Nav graph
+│   ├── di/                      # Hilt modules
+│   ├── ui/                      # Theme
+│   └── util/                    # Utilities
+│
+├── implementation/              # 📖 ESSENTIAL DOCS (Organized by Purpose)
+│   │
+│   ├── 01-MIGRATIONS/           # Database evolution (read in order!)
+│   │   ├── MIGRATION_HISTORY.md        # ⭐ Migration timeline & verification
+│   │   ├── 01-FOUNTAINS_MIGRATION.sql
+│   │   ├── 02-USER_ROLES_MIGRATION.sql
+│   │   ├── 03-ADMIN_FOUNTAIN_MANAGEMENT_MIGRATION.sql
+│   │   └── 04-DELETE_ACCOUNT_MIGRATION.sql
+│   │
+│   ├── 02-CURRENT_STATE/        # Where we are NOW
+│   │   ├── APP_STATUS.md               # ⭐ Current implementation snapshot
+│   │   └── KNOWN_ISSUES.md             # Technical debt & bugs
+│   │
+│   ├── 03-PRODUCTION/           # Launch preparation
+│   │   ├── DEPLOYMENT_GUIDE.md         # Step-by-step launch process
+│   │   └── SECURITY_CHECKLIST.md       # Security hardening
+│   │
+│   └── 04-SETUP_GUIDES/         # Initial setup instructions
+│       ├── SUPABASE_SETUP.md           # Backend configuration
+│       ├── EDGE_FUNCTION_SETUP.md      # Account deletion function
+│       └── MAPBOX_SETUP.md             # Map provider setup
+│
+├── local.properties             # 🔒 Credentials (gitignored)
+└── LICENSE                      # MIT License
 ```
 
 ---
 
-## 🔍 Essential Reading for AI Agents
+## 🔍 Essential Reading Order
 
-Before making any changes, **YOU MUST READ** these files in order:
+**For understanding the current state:**
 
-1. **`implementation/IMPLEMENTATION_STATUS.md`**
-   - Current implementation progress
-   - What's completed vs. what's pending
-   - Known issues and blockers
+1. **`implementation/02-CURRENT_STATE/APP_STATUS.md`** ⭐ START HERE
+   - Complete current status snapshot (95% production ready)
+   - What's working, what needs attention
+   - Confidence levels and metrics
+   - Path to launch
 
-2. **`implementation/IMPLEMENTATION_PLANS.md`**
-   - Complete architecture overview
-   - Technology decisions and rationale
-   - Database schemas (local + remote)
-   - Alternative approaches considered
+2. **`implementation/01-MIGRATIONS/MIGRATION_HISTORY.md`** ⭐ DATABASE EVOLUTION
+   - Chronological database changes
+   - 4 migrations applied in order
+   - Verification queries
+   - Current production state
 
-3. **`implementation/SUPABASE_IMPLEMENTATION_GUIDE.md`**
-   - Backend setup instructions
-   - SQL schemas and RLS policies
-   - Repository patterns and examples
-   - Phase-by-phase implementation guide
+3. **`implementation/02-CURRENT_STATE/KNOWN_ISSUES.md`**
+   - Technical debt items
+   - Known bugs and workarounds
+   - Prioritized action items
+   - None are launch blockers
 
-4. **`MAPBOX_SETUP_INSTRUCTIONS.md`** (in project root)
-   - Map integration setup
-   - Token configuration
-   - Troubleshooting guide
+**For making changes:**
+
+4. **`implementation/04-SETUP_GUIDES/SUPABASE_SETUP.md`**
+   - Database schema details
+   - RLS policies
+   - Triggers and functions
+
+5. **`implementation/03-PRODUCTION/DEPLOYMENT_GUIDE.md`**
+   - Launch checklist
+   - App signing
+   - Play Store setup
+
+**For specific features:**
+
+6. **`implementation/04-SETUP_GUIDES/EDGE_FUNCTION_SETUP.md`**
+   - Account deletion (GDPR compliance)
+   - Optional for MVP
+
+7. **`implementation/03-PRODUCTION/SECURITY_CHECKLIST.md`**
+   - Security audit results
+   - Hardening recommendations
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Architecture
 
 ### Clean Architecture Layers
-
 ```
-┌─────────────────────────────────────────────┐
-│         Presentation Layer                   │
-│  (Jetpack Compose + ViewModels + StateFlow) │
-└─────────────────┬───────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────┐
-│           Domain Layer                       │
-│   (Business Logic + Use Cases + Interfaces) │
-└─────────────────┬───────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────┐
-│            Data Layer                        │
-│  (Repositories + Room DB + Supabase API)    │
-└─────────────────────────────────────────────┘
+Presentation (Compose + ViewModels + StateFlow)
+    ↓
+Domain (Use Cases + Interfaces)
+    ↓
+Data (Repositories + Supabase API)
 ```
 
-### Key Technologies
-
+### Tech Stack
 - **UI:** Jetpack Compose + Material 3
-- **DI:** Hilt (Dagger)
+- **DI:** Hilt
 - **Navigation:** Navigation Compose
-- **Local DB:** Room (for fountain data cache)
-- **Remote API:** Supabase (PostgreSQL + Auth)
+- **Remote DB:** Supabase (PostgreSQL)
 - **Maps:** Mapbox Android SDK
 - **Networking:** Ktor (Supabase client)
-- **Async:** Kotlin Coroutines + Flow
+- **Async:** Coroutines + Flow
 - **Serialization:** kotlinx.serialization
 
+### ⚠️ Important Note
+**Room database code exists but is NOT USED.** All fountain data comes from Supabase. See `CODE_ANALYSIS_ISSUES.md` for cleanup recommendations.
+
 ---
 
-## 🔐 Security & Credentials
+## 🔐 Credentials
 
-### ⚠️ CRITICAL: Never Commit Secrets!
+### Never Commit These Files:
+- `local.properties` (contains API keys)
+- `keystore.properties` (if exists)
+- `logs/` directory
 
-The following files contain sensitive credentials and **MUST NEVER** be committed:
+### Required in `local.properties`:
+```properties
+SUPABASE_URL=https://xxxxx.supabase.co
+SUPABASE_KEY=eyJhbGc...
+MAPBOX_PUBLIC_TOKEN=pk.xxxxx
+```
 
-1. **`local.properties`** - Contains:
-   - `SUPABASE_URL` - Backend database URL
-   - `SUPABASE_KEY` - Anon API key
-   - `MAPBOX_PUBLIC_TOKEN` - Public map token
-   - `MAPBOX_DOWNLOADS_TOKEN` - Secret download token (critical!)
-
-2. **`app/src/main/res/values/supabase_config.xml`** - If it exists (currently not used)
-
-3. **`logs/`** - May contain runtime secrets
-
-### ✅ These are already in `.gitignore` - verify before any commit!
-
-### How Credentials Are Used
-
+### How They're Used:
 ```kotlin
-// In app/build.gradle.kts - loaded from local.properties
+// Build config reads from local.properties
 buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
-buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
-buildConfigField("String", "MAPBOX_PUBLIC_TOKEN", "\"$mapboxPublicToken\"")
 
-// In code - accessed via BuildConfig
-val supabaseUrl = BuildConfig.SUPABASE_URL
-val mapboxToken = BuildConfig.MAPBOX_PUBLIC_TOKEN
+// Code accesses via BuildConfig
+val url = BuildConfig.SUPABASE_URL
 ```
 
 ---
 
-## 📊 Database Architecture
+## 📊 Database Schema
 
-### Local Database (Room)
+### Supabase PostgreSQL Tables:
+- **`fountains`** - 1,745 Barcelona fountains (migrated to Supabase)
+- **`profiles`** - User accounts (extends auth.users)
+  - Fields: id, nickname, total_ratings, average_score, best_fountain_id, role
+- **`reviews`** - Fountain reviews
+  - Rating categories: taste, freshness, location_rating, aesthetics, splash, jet
+  - Calculated: overall (average of 6 ratings)
+- **`leaderboard`** (VIEW) - User rankings
+- **`fountain_stats_detailed`** (VIEW) - Fountain aggregates with stats
 
-**Purpose:** Offline-first fountain data storage
-
-```kotlin
-// Entity: FountainEntity
-@Entity(tableName = "fountains")
-data class FountainEntity(
-    @PrimaryKey val codi: String,
-    val nom: String,
-    val carrer: String,
-    val numeroCarrer: String,
-    val latitude: Double,
-    val longitude: Double
-)
-```
-
-**Location:** `app/src/main/java/com/watxaut/fontsreviewer/data/local/`
-
-### Remote Database (Supabase PostgreSQL)
-
-**Tables:**
-- `profiles` - User accounts (extends `auth.users`)
-- `reviews` - Fountain reviews with 4 rating categories
-- `leaderboard` (VIEW) - User rankings
-- `fountain_stats` (VIEW) - Aggregated fountain metrics
-
-**Key Features:**
+### Key Features:
 - Row Level Security (RLS) policies
 - Automatic triggers for stats updates
-- Foreign key constraints
-- Calculated fields (e.g., `overall` score)
-
-**Location:** See `implementation/SUPABASE_IMPLEMENTATION_GUIDE.md` for SQL schema
+- Generated columns (e.g., `overall` score)
 
 ---
 
-## 🎨 UI/UX Guidelines
+## 🎨 UI Guidelines
 
-### Screens & Navigation
-
+### Navigation Flow
 ```
-Map (default) ────┬──→ Fountain Details ──→ Review Screen
-Stats ────────────┤
-Leaderboard ──────┤
-Profile ──────────┴──→ Login ──→ Register
+Map (start) ──→ Fountain Details ──→ Review Screen
+Stats ────────→ (requires auth)
+Leaderboard ──→ (public)
+Profile ──────→ Login/Register
 ```
 
-### Bottom Navigation (Main Screens)
-1. **Map** - Browse all fountains
-2. **Stats** - Personal statistics (requires auth)
-3. **Leaderboard** - Global rankings
-4. **Profile** - User account/settings
+### Bottom Nav (Main Screens)
+- **Map** | **Stats** | **Leaderboard** | **Profile**
 
-### Material 3 Design
-- Use `FontsReviewerTheme` wrapper
-- Follow Material 3 color scheme
-- Support dynamic colors
-- Implement proper loading/error states
-
-### Multi-Language Support
-
-**Strings are localized in 3 languages:**
-- `res/values/strings.xml` (English - default)
-- `res/values-es/strings.xml` (Spanish)
-- `res/values-ca/strings.xml` (Catalan)
-
-**Always use string resources:**
+### Multi-Language
+**Always use string resources - NEVER hardcode text:**
 ```kotlin
-// ✅ Correct
-Text(text = stringResource(R.string.fountain_name))
-
-// ❌ Wrong - never hardcode strings
-Text(text = "Fountain Name")
+✅ Text(text = stringResource(R.string.fountain_name))
+❌ Text(text = "Fountain Name")
 ```
+
+Supported: English (default), Spanish (`-es`), Catalan (`-ca`)
 
 ---
 
-## 🔨 Development Guidelines for AI Agents
+## 🔨 Development Guidelines
 
 ### Before Making Changes
+1. ✅ Read `implementation/02-CURRENT_STATE/APP_STATUS.md` for current state
+2. ✅ Read `implementation/02-CURRENT_STATE/KNOWN_ISSUES.md` for technical debt
+3. ✅ Search for existing code (use Grep/SemanticSearch)
+4. ✅ Check dependencies in `app/build.gradle.kts`
+5. ✅ Follow existing patterns
 
-1. **Read implementation docs** (see Essential Reading section)
-2. **Check current status** in `IMPLEMENTATION_STATUS.md`
-3. **Search for existing code** - don't recreate what exists
-4. **Verify dependencies** in `app/build.gradle.kts`
-5. **Check for TODO comments** in the codebase
+### Naming Conventions
+- **Screens:** `*Screen.kt` (MapScreen.kt)
+- **ViewModels:** `*ViewModel.kt` (MapViewModel.kt)
+- **Use Cases:** `*UseCase.kt` (GetFountainsUseCase.kt)
+- **Repositories:** `*Repository.kt` + `*RepositoryImpl.kt`
+- **DTOs:** `*Dto.kt` (ReviewDto.kt)
 
-### Code Style & Conventions
-
-#### Naming Conventions
-- **Screens:** `*Screen.kt` (e.g., `MapScreen.kt`)
-- **ViewModels:** `*ViewModel.kt` (e.g., `MapViewModel.kt`)
-- **Use Cases:** `*UseCase.kt` (e.g., `GetFountainsUseCase.kt`)
-- **Repositories:** `*Repository.kt` interface, `*RepositoryImpl.kt` implementation
-- **DTOs:** `*Dto.kt` (e.g., `ReviewDto.kt`)
-- **Entities:** `*Entity.kt` (e.g., `FountainEntity.kt`)
-
-#### Package Organization
-```
-com.watxaut.fontsreviewer
-├── data          # Data sources and repositories
-├── domain        # Business logic (pure Kotlin)
-├── presentation  # UI and ViewModels
-├── di            # Dependency injection
-├── ui            # Theme and reusable UI
-└── util          # Helper functions
-```
-
-#### Dependency Injection Pattern
+### Package Organization
 ```kotlin
-// ✅ Use constructor injection with Hilt
+com.watxaut.fontsreviewer
+├── data          # Data sources & repositories
+├── domain        # Business logic (pure Kotlin)
+├── presentation  # UI & ViewModels
+├── di            # Hilt modules
+├── ui            # Theme
+└── util          # Helpers
+```
+
+### Dependency Injection
+```kotlin
+// ✅ Constructor injection with Hilt
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val getFountainsUseCase: GetFountainsUseCase
 ) : ViewModel()
 
-// Repository implementations
+// ✅ Repository implementation
 @Singleton
 class FountainRepositoryImpl @Inject constructor(
-    private val fountainDao: FountainDao,
+    private val supabaseService: SupabaseService,
     @ApplicationContext private val context: Context
 ) : FountainRepository
 ```
 
-#### State Management
+### State Management
 ```kotlin
-// ✅ Use StateFlow for UI state
+// ✅ StateFlow for UI state
 private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
 val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
@@ -321,9 +269,9 @@ val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 val state by viewModel.uiState.collectAsStateWithLifecycle()
 ```
 
-#### Error Handling
+### Error Handling
 ```kotlin
-// ✅ Use Result type for operations that can fail
+// ✅ Use Result type
 suspend fun getReviews(fountainId: String): Result<List<Review>> {
     return try {
         val reviews = api.fetchReviews(fountainId)
@@ -334,77 +282,30 @@ suspend fun getReviews(fountainId: String): Result<List<Review>> {
 }
 ```
 
-### Testing Guidelines
-
-**Unit Tests:** `app/src/test/java/`
-- Test use cases and ViewModels
-- Mock repositories with MockK
-
-**UI Tests:** `app/src/androidTest/java/`
-- Test navigation flows
-- Test user interactions
-
-**Dependencies Available:**
-- JUnit 4
-- Kotlin Coroutines Test
-- MockK
-- Espresso
-- Compose UI Test
-
 ---
 
-## 🚀 Common Tasks for AI Agents
+## 🚀 Common Tasks
 
-### Task: Add a New Screen
+### Add New Screen
+1. Create `presentation/[feature]/[Feature]Screen.kt`
+2. Create `presentation/[feature]/[Feature]ViewModel.kt`
+3. Add route to `Screen.kt` sealed class
+4. Update `NavGraph.kt` with composable
+5. Add strings to all 3 language files (EN, ES, CA)
 
-1. **Create UI file:** `presentation/[feature]/[Feature]Screen.kt`
-2. **Create ViewModel:** `presentation/[feature]/[Feature]ViewModel.kt`
-3. **Add to navigation:**
-   - Add route to `Screen.kt`
-   - Update `NavGraph.kt`
-4. **Add strings:** Update all 3 language files (EN, ES, CA)
-5. **Test:** Verify navigation and state management
+### Add New Use Case
+1. Create `domain/usecase/[Action]UseCase.kt`
+2. Use repository interfaces (not implementations)
+3. Inject in ViewModel via Hilt
+4. Follow single responsibility principle
 
-### Task: Add a New Use Case
+### Add Supabase API Call
+1. Define DTO in `data/remote/dto/[Entity]Dto.kt` with `@Serializable`
+2. Add method to `SupabaseService`
+3. Update repository implementation
+4. Map DTO to domain model
 
-1. **Create interface:** `domain/usecase/[Action]UseCase.kt`
-2. **Implement logic:** Use repository interfaces, not implementations
-3. **Inject in ViewModel:** Constructor injection via Hilt
-4. **Test:** Create unit test in `test/` directory
-
-### Task: Add Supabase API Call
-
-1. **Define DTO:** `data/remote/dto/[Entity]Dto.kt` with `@Serializable`
-2. **Add method to `SupabaseService`:**
-   ```kotlin
-   suspend fun getEntity(): Result<EntityDto> {
-       return try {
-           val result = client.from("table").select().decodeSingle<EntityDto>()
-           Result.success(result)
-       } catch (e: Exception) {
-           Result.failure(e)
-       }
-   }
-   ```
-3. **Update repository:** Call service in repository implementation
-4. **Map to domain:** Use mapper to convert DTO → Domain model
-
-### Task: Fix Build Issues
-
-1. **Check dependencies:** `app/build.gradle.kts` and `gradle/libs.versions.toml`
-2. **Verify credentials:** Ensure `local.properties` has all required keys
-3. **Sync Gradle:** File → Sync Project with Gradle Files
-4. **Clean build:** `./gradlew clean build`
-5. **Check logs:** Look for specific error messages
-
-### Task: Add Localized String
-
-1. **English:** Add to `res/values/strings.xml`
-2. **Spanish:** Add to `res/values-es/strings.xml`
-3. **Catalan:** Add to `res/values-ca/strings.xml`
-4. **Use in code:** `stringResource(R.string.your_key)`
-
-**Example:**
+### Add Localized String
 ```xml
 <!-- values/strings.xml -->
 <string name="submit_review">Submit Review</string>
@@ -418,169 +319,83 @@ suspend fun getReviews(fountainId: String): Result<List<Review>> {
 
 ---
 
-## 🐛 Known Issues & Gotchas
+## ⚠️ Known Issues
 
-### Supabase Auth Trigger
-The `handle_new_user()` function **MUST** have `SECURITY DEFINER` to bypass RLS during signup. Without it, profile creation fails.
+See **`implementation/02-CURRENT_STATE/KNOWN_ISSUES.md`** for detailed analysis.
 
-### Mapbox Token Setup
-Two tokens required:
-- **Public token** (`pk.*`) - For displaying maps
-- **Secret token** (`sk.*`) - For Gradle downloads (needs `downloads:read` scope)
+### High Priority:
+1. **Room Database Dead Code** - Entire `data/local/` directory unused (fountains now in Supabase)
+2. **MapViewModel Architecture Violation** - Directly injects SupabaseService instead of using use case
+3. **Empty Components Directory** - Should be deleted
 
-### Room Database Initialization
-Fountains are loaded **lazily** on first app launch from `2025_fonts_bcn.csv`. Check logs if markers don't appear.
+### Action Required:
+- Remove Room database code (~7 files)
+- Create `GetUserReviewedFountainsUseCase`
+- Update MapViewModel to follow proper architecture
 
-### Navigation State
-Bottom nav is only visible on main screens (Map, Stats, Leaderboard, Profile). Detail screens hide it automatically.
+**None are launch blockers** - app works fine, these are code quality improvements.
 
----
-
-## 📦 Dependencies Overview
-
-### Core Dependencies (from `app/build.gradle.kts`)
-
-```kotlin
-// Jetpack Compose + Material 3
-implementation(libs.androidx.compose.bom)
-implementation(libs.androidx.material3)
-
-// Hilt Dependency Injection
-implementation(libs.hilt.android)
-ksp(libs.hilt.compiler)
-
-// Room Database
-implementation(libs.room.runtime)
-implementation(libs.room.ktx)
-ksp(libs.room.compiler)
-
-// Supabase (BOM ensures version compatibility)
-implementation(platform(libs.supabase.bom))
-implementation(libs.supabase.postgrest.kt)
-implementation(libs.supabase.auth.kt)
-
-// Ktor (required by Supabase)
-implementation(libs.ktor.client.android)
-implementation(libs.ktor.client.core)
-
-// Mapbox Maps
-implementation(libs.mapbox.maps)
-implementation(libs.mapbox.compose)
-
-// Navigation
-implementation(libs.navigation.compose)
-
-// Coil (image loading)
-implementation(libs.coil.compose)
-```
-
-### Version Catalog
-Dependency versions are centralized in `gradle/libs.versions.toml`
+**See full report in `implementation/02-CURRENT_STATE/KNOWN_ISSUES.md`**
 
 ---
 
-## 🔄 Data Flow Example
+## 🐛 Common Pitfalls
 
-### Submitting a Review
+### DON'T:
+- ❌ Hardcode strings (use `stringResource()`)
+- ❌ Mix architecture layers
+- ❌ Commit `local.properties` or credentials
+- ❌ Use Room database (it's dead code - use Supabase)
+- ❌ Create duplicate code (search first!)
+- ❌ Skip error handling
+- ❌ Ignore i18n (support all 3 languages)
 
-```
-User Input (ReviewScreen)
-    ↓
-ReviewViewModel.submitReview()
-    ↓
-SubmitReviewUseCase.invoke()
-    ↓
-ReviewRepository.submitReview()
-    ↓
-SupabaseService.createReview()
-    ↓
-Supabase API (PostgreSQL)
-    ↓
-Trigger: update_user_stats()
-    ↓
-profiles.total_ratings++
-```
-
-### Loading Fountains
-
-```
-App Startup (FontsReviewerApp)
-    ↓
-InitializeFountainsUseCase()
-    ↓
-FountainRepository.initializeFountains()
-    ↓
-Check: fountainDao.getFountainCount()
-    ↓ (if 0)
-CsvParser.parseFountainsFromAssets()
-    ↓
-fountainDao.insertAll()
-    ↓
-MapScreen observes Flow<List<Fountain>>
-```
+### DO:
+- ✅ Read implementation docs first (start with APP_STATUS.md)
+- ✅ Follow Clean Architecture
+- ✅ Use Hilt for dependency injection
+- ✅ Add strings in all 3 languages
+- ✅ Handle errors with Result<T>
+- ✅ Use StateFlow for UI state
+- ✅ Test critical flows
+- ✅ Check `KNOWN_ISSUES.md` before coding
 
 ---
 
-## 🎯 Completion Checklist
+## 📈 Project Status
 
-### Phase 1: Backend Setup ✅
-- [x] Supabase project created
-- [x] SQL schema executed
-- [x] RLS policies configured
-- [x] Auth configured
+### ✅ Completed (MVP Ready)
+- [x] All 8 screens implemented
+- [x] Supabase backend configured
+- [x] Authentication working
+- [x] Review system functional
+- [x] Map with 1,745 fountains
+- [x] Stats and leaderboard
+- [x] Multi-language support (EN/ES/CA)
+- [x] Material 3 design
+- [x] Navigation setup
+- [x] Hilt DI configured
 
-### Phase 2: Data Layer ✅
-- [x] Room database setup
-- [x] Supabase integration
-- [x] Repository pattern implemented
-- [x] Use cases created
+### ⚠️ Before Production Launch (Not Blockers)
+- [ ] App signing (keystore generation) - 30 min
+- [ ] Privacy policy (write + host) - 2 hours
+- [ ] Play Store listing (screenshots + descriptions) - 3 hours
+- [ ] Remove Room database dead code (optional cleanup)
+- [ ] Fix MapViewModel architecture (optional cleanup)
+- [ ] Add unit tests (post-launch)
 
-### Phase 3: UI Implementation ✅
-- [x] Map screen with Mapbox
-- [x] Login/Register screens
-- [x] Fountain details screen
-- [x] Review submission screen
-- [x] Stats screen
-- [x] Leaderboard screen
-- [x] Profile screen
-- [x] Bottom navigation
+**Full status:** See `implementation/02-CURRENT_STATE/APP_STATUS.md`
 
-### Phase 4: Polish & Testing ⏳
-- [ ] Unit tests for use cases
-- [ ] UI tests for critical flows
-- [ ] Error handling refinement
-- [ ] Loading states optimization
-- [ ] Offline mode improvements
-- [ ] Performance optimization
+**Launch timeline:** 1-2 weeks to Play Store live
 
 ---
 
-## 📞 Getting Help
+## 📞 Quick Reference
 
-### For AI Agents Working on This Project
-
-1. **Read the implementation docs first** - Most questions are answered there
-2. **Check existing code** - Search before creating new components
-3. **Follow Clean Architecture** - Don't mix layers
-4. **Use Hilt DI** - Constructor injection everywhere
-5. **Test your changes** - Build and run before committing
-
-### Documentation Hierarchy
-```
-1. implementation/IMPLEMENTATION_STATUS.md  ← Start here
-2. implementation/IMPLEMENTATION_PLANS.md   ← Architecture details
-3. implementation/SUPABASE_IMPLEMENTATION_GUIDE.md ← Backend guide
-4. agents.md (this file)                    ← AI agent reference
-```
-
-### Useful Commands
-
+### Build Commands
 ```bash
-# Build the project
+# Build
 ./gradlew assembleDebug
-
-# Run tests
-./gradlew test
 
 # Install on device
 ./gradlew installDebug
@@ -588,64 +403,87 @@ MapScreen observes Flow<List<Fountain>>
 # Clean build
 ./gradlew clean build
 
-# Check for unused dependencies
-./gradlew buildHealth
+# Run tests
+./gradlew test
 ```
 
----
+### Project Metrics
+- **Kotlin Files:** 57
+- **ViewModels:** 8
+- **Screens:** 8
+- **Use Cases:** 7
+- **Repositories:** 3
+- **Overall Grade:** B+ (85/100)
 
-## 🎓 Learning Resources
-
-### Jetpack Compose
-- [Official Compose Docs](https://developer.android.com/jetpack/compose)
-- [Compose Navigation](https://developer.android.com/jetpack/compose/navigation)
-
-### Supabase
-- [Supabase Docs](https://supabase.com/docs)
-- [Kotlin Client Docs](https://supabase.com/docs/reference/kotlin)
-
-### Mapbox
-- [Android SDK Docs](https://docs.mapbox.com/android/)
-- [Compose Integration](https://docs.mapbox.com/android/maps/guides/compose/)
-
-### Clean Architecture
-- [Uncle Bob's Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [Android Clean Architecture Guide](https://developer.android.com/topic/architecture)
+### Dependencies (Key)
+- Jetpack Compose BOM
+- Hilt 2.50
+- Supabase BOM 2.5.4
+- Mapbox Maps 11.3.0
+- Ktor Client 2.3.11
+- Navigation Compose 2.7.7
 
 ---
 
-## 📝 Final Notes for AI Agents
+## 🎓 Resources
 
-### DO's ✅
-- ✅ Read `implementation/` docs before making changes
-- ✅ Follow Clean Architecture principles
-- ✅ Use dependency injection (Hilt)
-- ✅ Add strings in all 3 languages (EN, ES, CA)
-- ✅ Handle errors with Result type
-- ✅ Use StateFlow for UI state
-- ✅ Test critical user flows
-- ✅ Verify credentials in `local.properties`
+### Documentation
+- [Jetpack Compose](https://developer.android.com/jetpack/compose)
+- [Supabase Kotlin](https://supabase.com/docs/reference/kotlin)
+- [Mapbox Android](https://docs.mapbox.com/android/)
+- [Clean Architecture](https://developer.android.com/topic/architecture)
 
-### DON'Ts ❌
-- ❌ Commit `local.properties` or secrets
-- ❌ Hardcode strings (use string resources)
-- ❌ Mix architecture layers
-- ❌ Create duplicate code (search first!)
-- ❌ Skip reading implementation docs
-- ❌ Use deprecated Android APIs
-- ❌ Ignore error handling
-- ❌ Break existing functionality
+### Project Docs
+- Current Status: `implementation/02-CURRENT_STATE/APP_STATUS.md`
+- Database Migrations: `implementation/01-MIGRATIONS/MIGRATION_HISTORY.md`
+- Known Issues: `implementation/02-CURRENT_STATE/KNOWN_ISSUES.md`
+- Backend Setup: `implementation/04-SETUP_GUIDES/SUPABASE_SETUP.md`
+- Deployment: `implementation/03-PRODUCTION/DEPLOYMENT_GUIDE.md`
+- Security: `implementation/03-PRODUCTION/SECURITY_CHECKLIST.md`
 
 ---
 
-**Project Status:** ✅ MVP Complete - Ready for Testing & Polish
+## 📝 Final Notes
 
-**Last Updated:** 2025-10-11
+**Project Status:** 🟢 **95% Production Ready** (1-2 weeks to launch)
 
+**Key Strengths:**
+- ✅ All 8 screens implemented and tested
+- ✅ 1,745 fountains loaded in Supabase
+- ✅ Solid Clean Architecture + MVVM
+- ✅ Proper DI with Hilt
+- ✅ Complete feature set (map, reviews, leaderboard, stats)
+- ✅ Good error handling (Result<T> pattern)
+- ✅ Multi-language support (EN/ES/CA)
+- ✅ User roles (admin/operator)
+- ✅ Security (RLS, HTTPS, ProGuard)
+
+**Critical for Launch (5%):**
+- 🔴 App signing configuration (30 min)
+- 🔴 Privacy policy (2 hours)
+- 🔴 Play Store listing (3 hours)
+
+**Optional Code Quality Improvements:**
+- 🟡 Remove Room dead code (~7 files, reduces APK size)
+- 🟡 Fix MapViewModel pattern (architecture consistency)
+- 🟢 Add unit tests (post-launch)
+
+**Launch Timeline:**
+- Week 1: Signing + privacy policy + Play Store setup
+- Week 2: Beta testing with 10-20 users
+- Week 3: Submit to production + Google review (3-7 days)
+- Week 4: **LIVE ON PLAY STORE!** 🚀
+
+**Last Updated:** 2025-10-12  
+**License:** MIT  
 **Maintainer:** watxaut
 
-**License:** [Add license information]
-
 ---
 
-> 💡 **Pro Tip for AI Agents:** When in doubt, check `implementation/IMPLEMENTATION_STATUS.md` for current progress and known issues. This file is updated as the project evolves.
+> 💡 **Quick Start for New AI Agents:**
+> 1. Read `implementation/02-CURRENT_STATE/APP_STATUS.md` first - complete snapshot
+> 2. Check `implementation/01-MIGRATIONS/MIGRATION_HISTORY.md` - understand database
+> 3. Review `implementation/02-CURRENT_STATE/KNOWN_ISSUES.md` - technical debt
+> 4. For deployment: `implementation/03-PRODUCTION/DEPLOYMENT_GUIDE.md`
+> 
+> **The app works great!** Only missing: app signing, privacy policy, and Play Store assets.

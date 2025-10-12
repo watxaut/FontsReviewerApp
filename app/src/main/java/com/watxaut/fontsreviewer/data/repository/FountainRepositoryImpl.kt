@@ -22,8 +22,8 @@ class FountainRepositoryImpl @Inject constructor(
         private const val TAG = "FountainRepository"
     }
 
-    override fun getAllFountains(): Flow<List<Fountain>> = flow {
-        SecureLog.i(TAG, "Fetching all fountains from Supabase...")
+    override fun getAllFountains(includeDeleted: Boolean): Flow<List<Fountain>> = flow {
+        SecureLog.i(TAG, "Fetching all fountains from Supabase (includeDeleted=$includeDeleted)...")
         
         // Check internet connectivity first
         if (!NetworkUtil.isNetworkAvailable(context)) {
@@ -33,7 +33,11 @@ class FountainRepositoryImpl @Inject constructor(
         
         try {
             // Fetch fountains with stats from Supabase
-            val result = supabaseService.getAllFountainsWithStats()
+            val result = if (includeDeleted) {
+                supabaseService.getAllFountainsIncludingDeleted()
+            } else {
+                supabaseService.getAllFountainsWithStats()
+            }
             
             if (result.isSuccess) {
                 val fountainsDto = result.getOrNull() ?: emptyList()
@@ -46,7 +50,8 @@ class FountainRepositoryImpl @Inject constructor(
                         latitude = dto.latitude,
                         longitude = dto.longitude,
                         averageRating = dto.averageRating,
-                        totalReviews = dto.totalReviews
+                        totalReviews = dto.totalReviews,
+                        isDeleted = dto.isDeleted
                     )
                 }
                 
@@ -99,7 +104,8 @@ class FountainRepositoryImpl @Inject constructor(
                         latitude = it.latitude,
                         longitude = it.longitude,
                         averageRating = it.averageRating,
-                        totalReviews = it.totalReviews
+                        totalReviews = it.totalReviews,
+                        isDeleted = it.isDeleted
                     )
                 }
             } else {
@@ -112,18 +118,64 @@ class FountainRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun initializeFountains() {
-        // No longer needed - fountains are in Supabase
-        SecureLog.i(TAG, "initializeFountains called but no longer needed (fountains are in Supabase)")
-    }
-
-    override suspend fun getFountainCount(): Int {
+    
+    override suspend fun createFountain(fountain: com.watxaut.fontsreviewer.domain.model.CreateFountainRequest): Result<String> {
         return try {
-            val result = supabaseService.getAllFountainsWithStats()
-            result.getOrNull()?.size ?: 0
+            // Check internet connectivity
+            if (!NetworkUtil.isNetworkAvailable(context)) {
+                SecureLog.e(TAG, "No internet connection for creating fountain")
+                return Result.failure(NoInternetException("No internet connection. Please check your network settings."))
+            }
+            
+            // Convert domain model to DTO
+            val fountainDto = com.watxaut.fontsreviewer.data.remote.dto.CreateFountainDto(
+                nom = fountain.nom,
+                carrer = fountain.carrer,
+                numeroCarrer = fountain.numeroCarrer,
+                latitude = fountain.latitude,
+                longitude = fountain.longitude
+            )
+            
+            // Call Supabase service
+            val result = supabaseService.createFountain(fountainDto)
+            
+            if (result.isSuccess) {
+                val fountainCode = result.getOrNull()!!
+                SecureLog.i(TAG, "Successfully created fountain with code: $fountainCode")
+                Result.success(fountainCode)
+            } else {
+                val error = result.exceptionOrNull()
+                SecureLog.e(TAG, "Failed to create fountain: ${error?.message}")
+                Result.failure(error ?: Exception("Failed to create fountain"))
+            }
         } catch (e: Exception) {
-            SecureLog.e(TAG, "Error getting fountain count: ${e.message}")
-            0
+            SecureLog.e(TAG, "Error creating fountain: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun softDeleteFountain(fountainId: String): Result<Unit> {
+        return try {
+            // Check internet connectivity
+            if (!NetworkUtil.isNetworkAvailable(context)) {
+                SecureLog.e(TAG, "No internet connection for deleting fountain")
+                return Result.failure(NoInternetException("No internet connection. Please check your network settings."))
+            }
+            
+            // Call Supabase service
+            val result = supabaseService.softDeleteFountain(fountainId)
+            
+            if (result.isSuccess) {
+                SecureLog.i(TAG, "Successfully soft deleted fountain: $fountainId")
+                Result.success(Unit)
+            } else {
+                val error = result.exceptionOrNull()
+                SecureLog.e(TAG, "Failed to delete fountain: ${error?.message}")
+                Result.failure(error ?: Exception("Failed to delete fountain"))
+            }
+        } catch (e: Exception) {
+            SecureLog.e(TAG, "Error deleting fountain: ${e.message}", e)
+            Result.failure(e)
         }
     }
 }

@@ -420,6 +420,7 @@ class SupabaseService @Inject constructor(
     /**
      * Get all fountains with their review statistics using pagination
      * Fetches in batches of 1000 to work around Supabase max-rows limit
+     * Only includes non-deleted fountains (is_deleted = false)
      */
     suspend fun getAllFountainsWithStats(): Result<List<FountainWithStatsDto>> {
         return try {
@@ -460,6 +461,57 @@ class SupabaseService @Inject constructor(
     }
     
     /**
+     * Get all fountains INCLUDING deleted ones (admin only)
+     * Fetches from the fountains table directly, not the view
+     */
+    suspend fun getAllFountainsIncludingDeleted(): Result<List<FountainWithStatsDto>> {
+        return try {
+            val allFountains = mutableListOf<FountainWithStatsDto>()
+            var offset = 0
+            val batchSize = 1000
+            
+            SecureLog.i(TAG, "Fetching ALL fountains (including deleted) from Supabase...")
+            
+            while (true) {
+                val batch = client.from("fountains")
+                    .select(Columns.raw("""
+                        codi,
+                        nom,
+                        carrer,
+                        numero_carrer,
+                        latitude,
+                        longitude,
+                        is_deleted,
+                        total_reviews:reviews(count),
+                        average_rating:reviews.overall.avg()
+                    """)) {
+                        range(offset.toLong(), (offset + batchSize - 1).toLong())
+                    }
+                    .decodeList<FountainWithStatsDto>()
+                
+                if (batch.isEmpty()) {
+                    break
+                }
+                
+                allFountains.addAll(batch)
+                SecureLog.i(TAG, "Fetched batch: ${batch.size} fountains (total so far: ${allFountains.size})")
+                
+                if (batch.size < batchSize) {
+                    break
+                }
+                
+                offset += batchSize
+            }
+            
+            SecureLog.i(TAG, "Finished fetching all ${allFountains.size} fountains (including deleted)")
+            Result.success(allFountains)
+        } catch (e: Exception) {
+            SecureLog.e(TAG, "Failed to fetch fountains with deleted: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Get a single fountain by codi
      */
     suspend fun getFountainByCodi(codi: String): Result<FountainWithStatsDto> {
@@ -475,5 +527,68 @@ class SupabaseService @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+    
+    /**
+     * Create a new fountain (admin only)
+     */
+    suspend fun createFountain(fountain: com.watxaut.fontsreviewer.data.remote.dto.CreateFountainDto): Result<String> {
+        return try {
+            SecureLog.d(TAG, "createFountain() called for: ${fountain.nom}")
+            
+            // Generate a unique fountain code
+            val fountainCode = generateFountainCode()
+            
+            // Create fountain with generated code
+            val fountainData = mapOf(
+                "codi" to fountainCode,
+                "nom" to fountain.nom,
+                "carrer" to fountain.carrer,
+                "numero_carrer" to fountain.numeroCarrer,
+                "latitude" to fountain.latitude,
+                "longitude" to fountain.longitude,
+                "is_deleted" to false
+            )
+            
+            client.from("fountains")
+                .insert(fountainData)
+            
+            SecureLog.d(TAG, "createFountain() success, code: $fountainCode")
+            Result.success(fountainCode)
+        } catch (e: Exception) {
+            SecureLog.e(TAG, "createFountain() error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Soft delete a fountain (admin only)
+     */
+    suspend fun softDeleteFountain(fountainId: String): Result<Unit> {
+        return try {
+            SecureLog.d(TAG, "softDeleteFountain() called for: $fountainId")
+            
+            client.from("fountains")
+                .update(mapOf("is_deleted" to true)) {
+                    filter {
+                        eq("codi", fountainId)
+                    }
+                }
+            
+            SecureLog.d(TAG, "softDeleteFountain() success")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            SecureLog.e(TAG, "softDeleteFountain() error: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Generate a unique fountain code in format: ADM_YYYYMMDD_HHMMSS
+     */
+    private fun generateFountainCode(): String {
+        val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US)
+            .format(java.util.Date())
+        return "ADM_$timestamp"
     }
 }

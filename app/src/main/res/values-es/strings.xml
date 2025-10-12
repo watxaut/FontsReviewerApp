@@ -92,4 +92,28 @@
     <string name="nickname_too_short">El apodo debe tener al menos 3 caracteres</string>
     <string name="password_too_short">La contraseña debe tener al menos 6 caracteres</string>
     <string name="rating_required">Por favor valora todas las categorías</string>
+    
+    <!-- Admin Features -->
+    <string name="create_fountain">Crear Fuente</string>
+    <string name="add_fountain">Añadir Fuente</string>
+    <string name="delete_fountain">Eliminar Fuente</string>
+    <string name="fountain_name">Nombre de la Fuente</string>
+    <string name="street_name">Nombre de la Calle</string>
+    <string name="street_number">Número de Calle</string>
+    <string name="select_location_on_map">Seleccionar ubicación en el mapa</string>
+    <string name="coordinates">Coordenadas</string>
+    <string name="latitude">Latitud</string>
+    <string name="longitude">Longitud</string>
+    <string name="fountain_created">¡Fuente creada con éxito!</string>
+    <string name="fountain_deleted">¡Fuente eliminada con éxito!</string>
+    <string name="error_creating_fountain">Error al crear la fuente</string>
+    <string name="error_deleting_fountain">Error al eliminar la fuente</string>
+    <string name="confirm_delete_fountain">¿Estás seguro de que quieres eliminar esta fuente?</string>
+    <string name="confirm_delete_fountain_message">Esta acción no se puede deshacer. La fuente ya no será visible para los usuarios.</string>
+    <string name="delete_confirmation">Confirmar Eliminación</string>
+    <string name="admin_only">Solo Administradores</string>
+    <string name="tap_map_to_select_location">Toca el mapa para seleccionar la ubicación de la fuente</string>
+    <string name="location_selected">Ubicación seleccionada</string>
+    <string name="create">Crear</string>
+    <string name="field_required">Este campo es obligatorio</string>
 </resources>

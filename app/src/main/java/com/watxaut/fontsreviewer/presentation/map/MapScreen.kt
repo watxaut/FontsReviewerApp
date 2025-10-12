@@ -41,6 +41,7 @@ fun MapScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val userLocation by viewModel.userLocation.collectAsState()
+    val showDeletedFountains by viewModel.showDeletedFountains.collectAsState()
     var selectedFountainId by remember { mutableStateOf<String?>(null) }
     
     val context = LocalContext.current
@@ -97,6 +98,7 @@ fun MapScreen(
         uiState = uiState,
         userLocation = userLocation,
         selectedFountainId = selectedFountainId,
+        showDeletedFountains = showDeletedFountains,
         onFountainClick = { fountainId ->
             selectedFountainId = fountainId
         },
@@ -110,6 +112,9 @@ fun MapScreen(
                 val location = LocationUtil.getCurrentLocation(context)
                 viewModel.updateUserLocation(location)
             }
+        },
+        onToggleDeletedFountains = {
+            viewModel.toggleShowDeletedFountains()
         }
     )
 }
@@ -120,10 +125,12 @@ fun MapScreenContent(
     uiState: MapUiState,
     userLocation: android.location.Location?,
     selectedFountainId: String?,
+    showDeletedFountains: Boolean,
     onFountainClick: (String) -> Unit,
     onDismissSheet: () -> Unit,
     onViewDetails: (String) -> Unit,
-    onRefreshLocation: () -> Unit
+    onRefreshLocation: () -> Unit,
+    onToggleDeletedFountains: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     
@@ -170,7 +177,10 @@ fun MapScreenContent(
                     userBestFountainId = uiState.userBestFountainId,
                     userReviewedFountainIds = uiState.userReviewedFountainIds,
                     userLocation = userLocation,
+                    currentUser = uiState.currentUser,
+                    showDeletedFountains = showDeletedFountains,
                     onFountainClick = onFountainClick,
+                    onToggleDeletedFountains = onToggleDeletedFountains,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -204,7 +214,10 @@ fun MapboxMapView(
     userBestFountainId: String?,
     userReviewedFountainIds: Set<String>,
     userLocation: android.location.Location?,
+    currentUser: com.watxaut.fontsreviewer.domain.model.User?,
+    showDeletedFountains: Boolean,
     onFountainClick: (String) -> Unit,
+    onToggleDeletedFountains: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Barcelona center coordinates
@@ -233,14 +246,19 @@ fun MapboxMapView(
             modifier = Modifier.fillMaxSize(),
             mapViewportState = mapViewportState
         ) {
-        // Separate fountains by type (priority order: best global > user best > user reviewed > regular)
+        // Separate fountains by type (priority order: best global > user best > user reviewed > deleted > regular)
         val regularFountains = mutableListOf<Pair<Fountain, Int>>()
         val userReviewedFountains = mutableListOf<Pair<Fountain, Int>>()
         val bestFountain = mutableListOf<Pair<Fountain, Int>>()
         val userBestFountain = mutableListOf<Pair<Fountain, Int>>()
+        val deletedFountains = mutableListOf<Pair<Fountain, Int>>()
         
         fountains.forEachIndexed { index, fountain ->
             when {
+                fountain.isDeleted -> {
+                    // Deleted fountains (red/gray - only visible to admins)
+                    deletedFountains.add(fountain to index)
+                }
                 fountain.codi == bestFountainId -> {
                     // Best rated fountain globally (gold)
                     bestFountain.add(fountain to index)
@@ -330,6 +348,26 @@ fun MapboxMapView(
                         .withCircleColor("#66BB6A") // Lighter green to differentiate from regular reviewed
                         .withCircleStrokeColor("#2E7D32") // Dark green border
                         .withCircleStrokeWidth(3.0) // Increased from 2.5 to 3.0
+                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                },
+                onClick = { annotation ->
+                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
+                    onFountainClick(codi)
+                    true
+                }
+            )
+        }
+        
+        // Add deleted fountain markers (gray/red circles - admin only)
+        if (deletedFountains.isNotEmpty() && showDeletedFountains) {
+            CircleAnnotationGroup(
+                annotations = deletedFountains.map { (fountain, _) ->
+                    CircleAnnotationOptions()
+                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                        .withCircleRadius(8.0)
+                        .withCircleColor("#757575") // Gray
+                        .withCircleStrokeColor("#D32F2F") // Red border to indicate deleted
+                        .withCircleStrokeWidth(2.5)
                         .withData(com.google.gson.JsonPrimitive(fountain.codi))
                 },
                 onClick = { annotation ->

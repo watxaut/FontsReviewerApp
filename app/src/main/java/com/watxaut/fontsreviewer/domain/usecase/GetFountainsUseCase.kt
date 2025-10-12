@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetFountainsUseCase @Inject constructor(
     private val repository: FountainRepository
 ) {
-    operator fun invoke(): Flow<List<Fountain>> {
-        return repository.getAllFountains()
+    operator fun invoke(includeDeleted: Boolean = false): Flow<List<Fountain>> {
+        return repository.getAllFountains(includeDeleted)
     }
 }

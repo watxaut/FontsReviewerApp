@@ -92,4 +92,28 @@
     <string name="nickname_too_short">Nickname must be at least 3 characters</string>
     <string name="password_too_short">Password must be at least 6 characters</string>
     <string name="rating_required">Please rate all categories</string>
+    
+    <!-- Admin Features -->
+    <string name="create_fountain">Create Fountain</string>
+    <string name="add_fountain">Add Fountain</string>
+    <string name="delete_fountain">Delete Fountain</string>
+    <string name="fountain_name">Fountain Name</string>
+    <string name="street_name">Street Name</string>
+    <string name="street_number">Street Number</string>
+    <string name="select_location_on_map">Select location on map</string>
+    <string name="coordinates">Coordinates</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="fountain_created">Fountain created successfully!</string>
+    <string name="fountain_deleted">Fountain deleted successfully!</string>
+    <string name="error_creating_fountain">Error creating fountain</string>
+    <string name="error_deleting_fountain">Error deleting fountain</string>
+    <string name="confirm_delete_fountain">Are you sure you want to delete this fountain?</string>
+    <string name="confirm_delete_fountain_message">This action cannot be undone. The fountain will no longer be visible to users.</string>
+    <string name="delete_confirmation">Delete Confirmation</string>
+    <string name="admin_only">Admin Only</string>
+    <string name="tap_map_to_select_location">Tap on the map to select fountain location</string>
+    <string name="location_selected">Location selected</string>
+    <string name="create">Create</string>
+    <string name="field_required">This field is required</string>
 </resources>
