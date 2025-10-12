@@ -1,7 +1,7 @@
 package com.watxaut.fontsreviewer.data.remote.service
 
-import android.util.Log
 import com.watxaut.fontsreviewer.data.remote.dto.CreateProfileDto
+import com.watxaut.fontsreviewer.util.SecureLog
 import com.watxaut.fontsreviewer.data.remote.dto.CreateReviewDto
 import com.watxaut.fontsreviewer.data.remote.dto.FountainStatsDto
 import com.watxaut.fontsreviewer.data.remote.dto.FountainWithStatsDto
@@ -33,13 +33,12 @@ class SupabaseService @Inject constructor(
 
     suspend fun signUp(email: String, password: String, nickname: String): Result<String> {
         return try {
-            Log.d(TAG, "=== SIGN UP START ===")
-            Log.d(TAG, "Email: $email")
-            Log.d(TAG, "Nickname: $nickname")
-            Log.d(TAG, "Password length: ${password.length}")
+            SecureLog.d(TAG, "=== SIGN UP START ===")
+            // SECURITY: Never log email/password in production
+            SecureLog.d(TAG, "Nickname: $nickname")
             
             // First, check if the nickname is already taken
-            Log.d(TAG, "Checking if nickname is available...")
+            SecureLog.d(TAG, "Checking if nickname is available...")
             val nicknameCheck = try {
                 client.from("profiles")
                     .select {
@@ -49,17 +48,17 @@ class SupabaseService @Inject constructor(
                     }
                     .decodeList<ProfileDto>()
             } catch (e: Exception) {
-                Log.w(TAG, "Could not check nickname availability: ${e.message}")
+                SecureLog.w(TAG, "Could not check nickname availability: ${e.message}")
                 emptyList()
             }
             
             if (nicknameCheck.isNotEmpty()) {
-                Log.e(TAG, "Nickname '$nickname' is already taken")
+                SecureLog.e(TAG, "Nickname '$nickname' is already taken")
                 return Result.failure(Exception("Nickname is already taken"))
             }
-            Log.d(TAG, "Nickname is available")
+            SecureLog.d(TAG, "Nickname is available")
             
-            Log.d(TAG, "Calling Supabase signUpWith...")
+            SecureLog.d(TAG, "Calling Supabase signUpWith...")
             try {
                 client.auth.signUpWith(Email) {
                     this.email = email
@@ -68,58 +67,59 @@ class SupabaseService @Inject constructor(
                         put("nickname", nickname)
                     }
                 }
-                Log.d(TAG, "signUpWith completed successfully")
+                SecureLog.d(TAG, "signUpWith completed successfully")
             } catch (authException: Exception) {
-                Log.e(TAG, "Auth signUpWith failed: ${authException.message}", authException)
+                SecureLog.e(TAG, "Auth signUpWith failed: ${authException.message}", authException)
                 
                 // Check if user was created despite the error
-                Log.d(TAG, "Checking if user was created despite error...")
+                SecureLog.d(TAG, "Checking if user was created despite error...")
                 val session = client.auth.currentSessionOrNull()
                 if (session == null) {
-                    Log.e(TAG, "No session found, signup truly failed")
+                    SecureLog.e(TAG, "No session found, signup truly failed")
                     throw authException
                 }
-                Log.w(TAG, "User was created despite error, continuing...")
+                SecureLog.w(TAG, "User was created despite error, continuing...")
             }
 
             // Get current session
-            Log.d(TAG, "Getting current session...")
+            SecureLog.d(TAG, "Getting current session...")
             val session = client.auth.currentSessionOrNull()
-            Log.d(TAG, "Session: ${if (session != null) "exists" else "null"}")
+            SecureLog.d(TAG, "Session: ${if (session != null) "exists" else "null"}")
             
             val user = session?.user
-            Log.d(TAG, "User: ${if (user != null) "exists" else "null"}")
+            SecureLog.d(TAG, "User: ${if (user != null) "exists" else "null"}")
             
             val userId = user?.id
-            Log.d(TAG, "User ID: $userId")
+            // SECURITY: Never log user IDs in production
+            SecureLog.d(TAG, "User ID retrieved")
             
             if (userId == null) {
-                Log.e(TAG, "No user ID after signup!")
+                SecureLog.e(TAG, "No user ID after signup!")
                 return Result.failure(Exception("No user ID"))
             }
 
             // Check if profile already exists (from trigger)
-            Log.d(TAG, "Checking if profile already exists...")
+            SecureLog.d(TAG, "Checking if profile already exists...")
             val existingProfile = try {
                 getProfile(userId).getOrNull()
             } catch (e: Exception) {
-                Log.d(TAG, "Profile doesn't exist yet: ${e.message}")
+                SecureLog.d(TAG, "Profile doesn't exist yet: ${e.message}")
                 null
             }
             
             if (existingProfile != null) {
-                Log.d(TAG, "Profile already exists (created by trigger): $existingProfile")
-                Log.d(TAG, "=== SIGN UP SUCCESS ===")
+                SecureLog.d(TAG, "Profile already exists (created by trigger): $existingProfile")
+                SecureLog.d(TAG, "=== SIGN UP SUCCESS ===")
                 return Result.success(userId)
             }
 
             // Manually create profile if trigger didn't work
-            Log.d(TAG, "Creating profile manually for user: $userId")
+            SecureLog.d(TAG, "Creating profile manually for user: $userId")
             try {
                 createProfile(userId, nickname)
-                Log.d(TAG, "Profile created successfully")
+                SecureLog.d(TAG, "Profile created successfully")
             } catch (e: Exception) {
-                Log.e(TAG, "Error creating profile: ${e.message}", e)
+                SecureLog.e(TAG, "Error creating profile: ${e.message}", e)
                 
                 // Last chance: check if it was created between our checks
                 val finalCheck = try {
@@ -129,60 +129,60 @@ class SupabaseService @Inject constructor(
                 }
                 
                 if (finalCheck == null) {
-                    Log.e(TAG, "Failed to create profile, and none exists")
+                    SecureLog.e(TAG, "Failed to create profile, and none exists")
                     throw e
                 }
                 
-                Log.w(TAG, "Profile exists despite error, continuing")
+                SecureLog.w(TAG, "Profile exists despite error, continuing")
             }
 
-            Log.d(TAG, "=== SIGN UP SUCCESS ===")
+            SecureLog.d(TAG, "=== SIGN UP SUCCESS ===")
             Result.success(userId)
         } catch (e: Exception) {
-            Log.e(TAG, "=== SIGN UP FAILED ===")
-            Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
-            Log.e(TAG, "Error message: ${e.message}")
-            Log.e(TAG, "Error stack trace:", e)
+            SecureLog.e(TAG, "=== SIGN UP FAILED ===")
+            SecureLog.e(TAG, "Error type: ${e.javaClass.simpleName}")
+            SecureLog.e(TAG, "Error message: ${e.message}")
+            SecureLog.e(TAG, "Error stack trace:", e)
             Result.failure(e)
         }
     }
 
     suspend fun signIn(email: String, password: String): Result<String> {
         return try {
-            Log.d(TAG, "=== SIGN IN START ===")
-            Log.d(TAG, "Email: $email")
-            Log.d(TAG, "Password length: ${password.length}")
+            SecureLog.d(TAG, "=== SIGN IN START ===")
+            SecureLog.d(TAG, "Email: $email")
+            SecureLog.d(TAG, "Password length: ${password.length}")
             
-            Log.d(TAG, "Calling Supabase signInWith...")
+            SecureLog.d(TAG, "Calling Supabase signInWith...")
             client.auth.signInWith(Email) {
                 this.email = email
                 this.password = password
             }
-            Log.d(TAG, "signInWith completed successfully")
+            SecureLog.d(TAG, "signInWith completed successfully")
             
             // Get current session
-            Log.d(TAG, "Getting current session...")
+            SecureLog.d(TAG, "Getting current session...")
             val session = client.auth.currentSessionOrNull()
-            Log.d(TAG, "Session: ${if (session != null) "exists" else "null"}")
+            SecureLog.d(TAG, "Session: ${if (session != null) "exists" else "null"}")
             
             val user = session?.user
-            Log.d(TAG, "User: ${if (user != null) "exists" else "null"}")
+            SecureLog.d(TAG, "User: ${if (user != null) "exists" else "null"}")
             
             val userId = user?.id
-            Log.d(TAG, "User ID: $userId")
+            SecureLog.d(TAG, "User ID: $userId")
             
             if (userId == null) {
-                Log.e(TAG, "No user ID after signin!")
+                SecureLog.e(TAG, "No user ID after signin!")
                 return Result.failure(Exception("No user ID"))
             }
             
-            Log.d(TAG, "=== SIGN IN SUCCESS ===")
+            SecureLog.d(TAG, "=== SIGN IN SUCCESS ===")
             Result.success(userId)
         } catch (e: Exception) {
-            Log.e(TAG, "=== SIGN IN FAILED ===")
-            Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
-            Log.e(TAG, "Error message: ${e.message}")
-            Log.e(TAG, "Error stack trace:", e)
+            SecureLog.e(TAG, "=== SIGN IN FAILED ===")
+            SecureLog.e(TAG, "Error type: ${e.javaClass.simpleName}")
+            SecureLog.e(TAG, "Error message: ${e.message}")
+            SecureLog.e(TAG, "Error stack trace:", e)
             Result.failure(e)
         }
     }
@@ -190,6 +190,34 @@ class SupabaseService @Inject constructor(
     suspend fun signOut(): Result<Unit> {
         return try {
             client.auth.signOut()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            // Get current user ID before deletion
+            val userId = getCurrentUserId()
+            if (userId == null) {
+                return Result.failure(Exception("No user logged in"))
+            }
+            
+            // Delete user data from profiles table
+            // Note: Reviews will be handled by database cascade delete or you can delete them first
+            client.from("profiles")
+                .delete {
+                    filter {
+                        eq("id", userId)
+                    }
+                }
+            
+            // Sign out the user (Supabase doesn't provide direct account deletion via SDK)
+            // The actual user deletion from auth.users should be handled by a Supabase Edge Function
+            // or database trigger, or manually by admin
+            client.auth.signOut()
+            
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -207,21 +235,21 @@ class SupabaseService @Inject constructor(
     // ==================== Profiles ====================
 
     private suspend fun createProfile(userId: String, nickname: String) {
-        Log.d(TAG, "createProfile() called with userId: $userId, nickname: $nickname")
+        SecureLog.d(TAG, "createProfile() called with userId: $userId, nickname: $nickname")
         try {
             client.from("profiles").insert(
                 CreateProfileDto(id = userId, nickname = nickname)
             )
-            Log.d(TAG, "createProfile() insert completed")
+            SecureLog.d(TAG, "createProfile() insert completed")
         } catch (e: Exception) {
-            Log.e(TAG, "createProfile() failed: ${e.message}", e)
+            SecureLog.e(TAG, "createProfile() failed: ${e.message}", e)
             throw e
         }
     }
 
     suspend fun getProfile(userId: String): Result<ProfileDto> {
         return try {
-            Log.d(TAG, "getProfile() called with userId: $userId")
+            SecureLog.d(TAG, "getProfile() called with userId: $userId")
             val profile = client.from("profiles")
                 .select {
                     filter {
@@ -229,10 +257,10 @@ class SupabaseService @Inject constructor(
                     }
                 }
                 .decodeSingle<ProfileDto>()
-            Log.d(TAG, "getProfile() success: $profile")
+            SecureLog.d(TAG, "getProfile() success: $profile")
             Result.success(profile)
         } catch (e: Exception) {
-            Log.e(TAG, "getProfile() failed: ${e.message}", e)
+            SecureLog.e(TAG, "getProfile() failed: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -294,6 +322,27 @@ class SupabaseService @Inject constructor(
                 .decodeList<ReviewDto>()
             Result.success(reviews.firstOrNull())
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Get all fountain IDs that a user has reviewed
+     */
+    suspend fun getUserReviewedFountainIds(userId: String): Result<List<String>> {
+        return try {
+            val reviews = client.from("reviews")
+                .select(Columns.list("fountain_id")) {
+                    filter {
+                        eq("user_id", userId)
+                    }
+                }
+                .decodeList<Map<String, String>>()
+            val fountainIds = reviews.mapNotNull { it["fountain_id"] }
+            SecureLog.d(TAG, "User has reviewed ${fountainIds.size} fountains")
+            Result.success(fountainIds)
+        } catch (e: Exception) {
+            SecureLog.e(TAG, "Failed to get user reviewed fountains: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -378,7 +427,7 @@ class SupabaseService @Inject constructor(
             var offset = 0
             val batchSize = 1000
             
-            Log.i(TAG, "Fetching fountains from Supabase in batches...")
+            SecureLog.i(TAG, "Fetching fountains from Supabase in batches...")
             
             while (true) {
                 val batch = client.from("fountain_stats_detailed")
@@ -392,7 +441,7 @@ class SupabaseService @Inject constructor(
                 }
                 
                 allFountains.addAll(batch)
-                Log.i(TAG, "Fetched batch: ${batch.size} fountains (total so far: ${allFountains.size})")
+                SecureLog.i(TAG, "Fetched batch: ${batch.size} fountains (total so far: ${allFountains.size})")
                 
                 // If we got less than batchSize, we've reached the end
                 if (batch.size < batchSize) {
@@ -402,10 +451,10 @@ class SupabaseService @Inject constructor(
                 offset += batchSize
             }
             
-            Log.i(TAG, "Finished fetching all ${allFountains.size} fountains from Supabase")
+            SecureLog.i(TAG, "Finished fetching all ${allFountains.size} fountains from Supabase")
             Result.success(allFountains)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch fountains: ${e.message}", e)
+            SecureLog.e(TAG, "Failed to fetch fountains: ${e.message}", e)
             Result.failure(e)
         }
     }

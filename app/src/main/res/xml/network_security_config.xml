@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network Security Configuration
+    Enforces HTTPS-only traffic and prevents Man-in-the-Middle attacks
+-->
+<network-security-config>
+    
+    <!-- 
+        Base Configuration: Block ALL cleartext (HTTP) traffic by default
+        This prevents MITM attacks on public WiFi networks
+    -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust system certificate authorities -->
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!--
+        Mapbox Domain Configuration
+        Mapbox requires HTTPS by default, so no special configuration needed
+    -->
+    <domain-config>
+        <domain includeSubdomains="true">mapbox.com</domain>
+        <domain includeSubdomains="true">api.mapbox.com</domain>
+        <domain includeSubdomains="true">tiles.mapbox.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+    
+    <!--
+        Supabase Domain Configuration with Certificate Pinning (Optional but Recommended)
+        Certificate pinning adds an extra layer of security by validating
+        that the server's certificate matches expected pins.
+        
+        WARNING: Certificate pinning requires maintenance!
+        - Certificates expire and need to be rotated
+        - Always include backup pins
+        - Monitor certificate expiration dates
+        
+        To get certificate pins, run:
+        echo | openssl s_client -servername zibnlshkbketdkegddno.supabase.co -connect zibnlshkbketdkegddno.supabase.co:443 2>/dev/null | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64
+    -->
+    <!--
+    <domain-config>
+        <domain includeSubdomains="true">supabase.co</domain>
+        <pin-set expiration="2026-12-31">
+            <!- - Primary pin - Your Supabase certificate - ->
+            <pin digest="SHA-256">YOUR_PRIMARY_PIN_HERE==</pin>
+            <!- - Backup pin - Let's Encrypt root certificate - ->
+            <pin digest="SHA-256">YOUR_BACKUP_PIN_HERE==</pin>
+        </pin-set>
+    </domain-config>
+    -->
+    
+    <!-- 
+        Debug Overrides: Allow localhost for development/testing (commented out for now)
+        Uncomment only if you need to test with local servers
+    -->
+    <!--
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+    -->
+
+</network-security-config>

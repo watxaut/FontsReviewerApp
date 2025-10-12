@@ -52,10 +52,20 @@ class LoginViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, loginSuccess = true) }
                 }
                 .onFailure { error ->
+                    // Parse error message to show user-friendly text
+                    val userFriendlyMessage = when {
+                        error.message?.contains("invalid_grant", ignoreCase = true) == true -> "Incorrect email or password"
+                        error.message?.contains("invalid_credentials", ignoreCase = true) == true -> "Incorrect email or password"
+                        error.message?.contains("email not confirmed", ignoreCase = true) == true -> "Please verify your email"
+                        error.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection"
+                        error.message?.contains("timeout", ignoreCase = true) == true -> "Connection timeout. Please try again"
+                        else -> "Login failed. Please try again"
+                    }
+                    
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Login failed"
+                            errorMessage = userFriendlyMessage
                         )
                     }
                 }

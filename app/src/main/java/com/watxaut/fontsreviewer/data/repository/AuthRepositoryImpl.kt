@@ -1,6 +1,6 @@
 package com.watxaut.fontsreviewer.data.repository
 
-import android.util.Log
+import com.watxaut.fontsreviewer.util.SecureLog
 import com.watxaut.fontsreviewer.data.remote.service.SupabaseService
 import com.watxaut.fontsreviewer.domain.model.User
 import com.watxaut.fontsreviewer.domain.repository.AuthRepository
@@ -18,41 +18,41 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signIn(email: String, password: String): Result<User> {
         return try {
-            Log.d(TAG, "=== AUTH REPOSITORY: SIGN IN START ===")
-            Log.d(TAG, "Email: $email")
+            SecureLog.d(TAG, "=== AUTH REPOSITORY: SIGN IN START ===")
+            SecureLog.d(TAG, "Email: $email")
             
-            Log.d(TAG, "Calling SupabaseService.signIn...")
+            SecureLog.d(TAG, "Calling SupabaseService.signIn...")
             val userIdResult = supabaseService.signIn(email, password)
             
             if (userIdResult.isFailure) {
                 val error = userIdResult.exceptionOrNull() ?: Exception("Sign in failed")
-                Log.e(TAG, "SupabaseService.signIn failed: ${error.message}")
+                SecureLog.e(TAG, "SupabaseService.signIn failed: ${error.message}")
                 return Result.failure(error)
             }
 
             val userId = userIdResult.getOrNull()
-            Log.d(TAG, "Got user ID: $userId")
+            SecureLog.d(TAG, "Got user ID: $userId")
             
             if (userId == null) {
-                Log.e(TAG, "User ID is null!")
+                SecureLog.e(TAG, "User ID is null!")
                 return Result.failure(Exception("No user ID"))
             }
 
             // Get profile to get nickname
-            Log.d(TAG, "Getting profile for user: $userId")
+            SecureLog.d(TAG, "Getting profile for user: $userId")
             val profileResult = supabaseService.getProfile(userId)
             
             if (profileResult.isFailure) {
                 val error = profileResult.exceptionOrNull() ?: Exception("Failed to get profile")
-                Log.e(TAG, "getProfile failed: ${error.message}")
+                SecureLog.e(TAG, "getProfile failed: ${error.message}")
                 return Result.failure(error)
             }
 
             val profile = profileResult.getOrNull()
-            Log.d(TAG, "Got profile: $profile")
+            SecureLog.d(TAG, "Got profile: $profile")
             
             if (profile == null) {
-                Log.e(TAG, "Profile is null!")
+                SecureLog.e(TAG, "Profile is null!")
                 return Result.failure(Exception("No profile found"))
             }
 
@@ -64,54 +64,54 @@ class AuthRepositoryImpl @Inject constructor(
                 bestFountainId = profile.bestFountainId
             )
 
-            Log.d(TAG, "=== AUTH REPOSITORY: SIGN IN SUCCESS ===")
-            Log.d(TAG, "User: $user")
+            SecureLog.d(TAG, "=== AUTH REPOSITORY: SIGN IN SUCCESS ===")
+            SecureLog.d(TAG, "User: $user")
             Result.success(user)
         } catch (e: Exception) {
-            Log.e(TAG, "=== AUTH REPOSITORY: SIGN IN FAILED ===")
-            Log.e(TAG, "Error: ${e.message}", e)
+            SecureLog.e(TAG, "=== AUTH REPOSITORY: SIGN IN FAILED ===")
+            SecureLog.e(TAG, "Error: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     override suspend fun signUp(email: String, nickname: String, password: String): Result<User> {
         return try {
-            Log.d(TAG, "=== AUTH REPOSITORY: SIGN UP START ===")
-            Log.d(TAG, "Email: $email")
-            Log.d(TAG, "Nickname: $nickname")
+            SecureLog.d(TAG, "=== AUTH REPOSITORY: SIGN UP START ===")
+            SecureLog.d(TAG, "Email: $email")
+            SecureLog.d(TAG, "Nickname: $nickname")
             
-            Log.d(TAG, "Calling SupabaseService.signUp...")
+            SecureLog.d(TAG, "Calling SupabaseService.signUp...")
             val userIdResult = supabaseService.signUp(email, password, nickname)
             
             if (userIdResult.isFailure) {
                 val error = userIdResult.exceptionOrNull() ?: Exception("Sign up failed")
-                Log.e(TAG, "SupabaseService.signUp failed: ${error.message}")
+                SecureLog.e(TAG, "SupabaseService.signUp failed: ${error.message}")
                 return Result.failure(error)
             }
 
             val userId = userIdResult.getOrNull()
-            Log.d(TAG, "Got user ID: $userId")
+            SecureLog.d(TAG, "Got user ID: $userId")
             
             if (userId == null) {
-                Log.e(TAG, "User ID is null!")
+                SecureLog.e(TAG, "User ID is null!")
                 return Result.failure(Exception("No user ID"))
             }
 
             // Get profile
-            Log.d(TAG, "Getting profile for user: $userId")
+            SecureLog.d(TAG, "Getting profile for user: $userId")
             val profileResult = supabaseService.getProfile(userId)
             
             if (profileResult.isFailure) {
                 val error = profileResult.exceptionOrNull() ?: Exception("Failed to get profile")
-                Log.e(TAG, "getProfile failed: ${error.message}")
+                SecureLog.e(TAG, "getProfile failed: ${error.message}")
                 return Result.failure(error)
             }
 
             val profile = profileResult.getOrNull()
-            Log.d(TAG, "Got profile: $profile")
+            SecureLog.d(TAG, "Got profile: $profile")
             
             if (profile == null) {
-                Log.e(TAG, "Profile is null!")
+                SecureLog.e(TAG, "Profile is null!")
                 return Result.failure(Exception("No profile found"))
             }
 
@@ -123,18 +123,22 @@ class AuthRepositoryImpl @Inject constructor(
                 bestFountainId = profile.bestFountainId
             )
 
-            Log.d(TAG, "=== AUTH REPOSITORY: SIGN UP SUCCESS ===")
-            Log.d(TAG, "User: $user")
+            SecureLog.d(TAG, "=== AUTH REPOSITORY: SIGN UP SUCCESS ===")
+            SecureLog.d(TAG, "User: $user")
             Result.success(user)
         } catch (e: Exception) {
-            Log.e(TAG, "=== AUTH REPOSITORY: SIGN UP FAILED ===")
-            Log.e(TAG, "Error: ${e.message}", e)
+            SecureLog.e(TAG, "=== AUTH REPOSITORY: SIGN UP FAILED ===")
+            SecureLog.e(TAG, "Error: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     override suspend fun signOut(): Result<Unit> {
         return supabaseService.signOut()
+    }
+    
+    override suspend fun deleteAccount(): Result<Unit> {
+        return supabaseService.deleteAccount()
     }
 
     override suspend fun getCurrentUser(): User? {

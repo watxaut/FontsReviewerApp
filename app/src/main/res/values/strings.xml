@@ -28,6 +28,7 @@
     <string name="fountain_details">Fountain Details</string>
     <string name="view_reviews">View Reviews</string>
     <string name="add_review">Add Review</string>
+    <string name="center_on_location">Center on my location</string>
 
     <!-- Reviews -->
     <string name="reviews">Reviews</string>

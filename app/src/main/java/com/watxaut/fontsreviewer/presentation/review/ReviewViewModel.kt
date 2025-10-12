@@ -48,10 +48,6 @@ class ReviewViewModel @Inject constructor(
         _uiState.update { it.copy(jet = value.toInt()) }
     }
 
-    fun onCommentChange(comment: String) {
-        _uiState.update { it.copy(comment = comment) }
-    }
-
     fun onSubmit() {
         val state = _uiState.value
 
@@ -73,7 +69,7 @@ class ReviewViewModel @Inject constructor(
                 aesthetics = state.aesthetics,
                 splash = state.splash,
                 jet = state.jet,
-                comment = state.comment.ifBlank { null }
+                comment = null
             )
 
             submitReviewUseCase(request)
@@ -81,10 +77,21 @@ class ReviewViewModel @Inject constructor(
                     _uiState.update { it.copy(isSubmitting = false, submitSuccess = true) }
                 }
                 .onFailure { error ->
+                    // Parse error message to show user-friendly text
+                    val userFriendlyMessage = when {
+                        error.message?.contains("unique_user_fountain", ignoreCase = true) == true -> 
+                            "You have already reviewed this fountain"
+                        error.message?.contains("duplicate", ignoreCase = true) == true -> 
+                            "You have already reviewed this fountain"
+                        error.message?.contains("already reviewed", ignoreCase = true) == true -> 
+                            "You have already reviewed this fountain"
+                        else -> error.message ?: "Failed to submit review"
+                    }
+                    
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
-                            errorMessage = error.message ?: "Failed to submit review"
+                            errorMessage = userFriendlyMessage
                         )
                     }
                 }
@@ -103,7 +110,6 @@ data class ReviewUiState(
     val aesthetics: Int = 0,
     val splash: Int = 0,
     val jet: Int = 0,
-    val comment: String = "",
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
     val submitSuccess: Boolean = false

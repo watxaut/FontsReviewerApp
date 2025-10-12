@@ -21,12 +21,21 @@ fun ProfileScreen(
     LaunchedEffect(Unit) {
         viewModel.refreshProfile()
     }
+    
+    // Handle account deletion success
+    LaunchedEffect(uiState) {
+        if (uiState is ProfileUiState.AccountDeleted) {
+            onLogout() // Navigate away after account deletion
+        }
+    }
 
     ProfileScreenContent(
         uiState = uiState,
         onLoginClick = onNavigateToLogin,
         onRegisterClick = onNavigateToRegister,
-        onLogoutClick = viewModel::onLogoutClick
+        onLogoutClick = viewModel::onLogoutClick,
+        onDeleteAccountClick = viewModel::onDeleteAccountClick,
+        onDismissDeleteError = viewModel::onDismissDeleteError
     )
 }
 
@@ -36,8 +45,57 @@ fun ProfileScreenContent(
     uiState: ProfileUiState,
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
+    onDismissDeleteError: () -> Unit
 ) {
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    
+    // Delete confirmation dialog
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text("Delete Account") },
+            text = { 
+                Text(
+                    "Are you sure you want to delete your account?\n\n" +
+                    "This action cannot be undone. All your reviews and data will be permanently deleted."
+                ) 
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirmDialog = false
+                        onDeleteAccountClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Delete error dialog
+    if (uiState is ProfileUiState.DeleteAccountError) {
+        AlertDialog(
+            onDismissRequest = onDismissDeleteError,
+            title = { Text("Error") },
+            text = { Text(uiState.errorMessage) },
+            confirmButton = {
+                Button(onClick = onDismissDeleteError) {
+                    Text("OK")
+                }
+            }
+        )
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -131,12 +189,102 @@ fun ProfileScreenContent(
                     
                     Button(
                         onClick = onLogoutClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Logout")
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedButton(
+                        onClick = { showDeleteConfirmDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Delete Account")
+                    }
+                }
+                is ProfileUiState.DeletingAccount -> {
+                    // Show loading while deleting
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    CircularProgressIndicator()
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = "Deleting account...",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+                is ProfileUiState.AccountDeleted -> {
+                    // Show success message briefly before navigation
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    Text(
+                        text = "Account deleted successfully",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+                is ProfileUiState.DeleteAccountError -> {
+                    // Show profile with error dialog (handled above)
+                    Spacer(modifier = Modifier.height(32.dp))
+                    
+                    Text(
+                        text = "Welcome back!",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Nickname: ${uiState.user.nickname}",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "Total Ratings: ${uiState.user.totalRatings}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Average Score: ${"%.1f".format(uiState.user.averageScore)}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    Button(
+                        onClick = onLogoutClick,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Logout")
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedButton(
+                        onClick = { showDeleteConfirmDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Delete Account")
                     }
                 }
                 is ProfileUiState.Error -> {

@@ -60,9 +60,21 @@ class FountainDetailsViewModel @Inject constructor(
                 // Load reviews
                 reviewRepository.getReviewsForFountain(fountainId)
                     .onSuccess { reviews ->
+                        // Check if current user has already reviewed this fountain
+                        val userId = currentUser?.id
+                        var userHasReviewed = false
+                        
+                        if (userId != null) {
+                            reviewRepository.getUserReview(userId, fountainId)
+                                .onSuccess { userReview ->
+                                    userHasReviewed = userReview != null
+                                }
+                        }
+                        
                         _uiState.value = FountainDetailsUiState.Success(
                             fountain = fountain,
-                            reviews = reviews
+                            reviews = reviews,
+                            userHasReviewed = userHasReviewed
                         )
                     }
                     .onFailure { error ->
@@ -70,7 +82,8 @@ class FountainDetailsViewModel @Inject constructor(
                         _uiState.value = FountainDetailsUiState.Success(
                             fountain = fountain,
                             reviews = emptyList(),
-                            reviewsError = error.message
+                            reviewsError = error.message,
+                            userHasReviewed = false
                         )
                     }
             } catch (e: Exception) {
@@ -91,7 +104,8 @@ sealed class FountainDetailsUiState {
     data class Success(
         val fountain: Fountain,
         val reviews: List<Review>,
-        val reviewsError: String? = null
+        val reviewsError: String? = null,
+        val userHasReviewed: Boolean = false
     ) : FountainDetailsUiState()
     data class Error(val message: String) : FountainDetailsUiState()
 }

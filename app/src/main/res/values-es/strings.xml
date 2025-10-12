@@ -28,6 +28,7 @@
     <string name="fountain_details">Detalles de la fuente</string>
     <string name="view_reviews">Ver reseñas</string>
     <string name="add_review">Añadir reseña</string>
+    <string name="center_on_location">Centrar en mi ubicación</string>
 
     <!-- Reviews -->
     <string name="reviews">Reseñas</string>

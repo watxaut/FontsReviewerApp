@@ -1,13 +1,29 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Auto Backup Rules for API <31
+    SECURITY: Exclude all sensitive data from backups to prevent data extraction via ADB
+    See: https://developer.android.com/guide/topics/data/autobackup
 -->
 <full-backup-content>
     <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+        EXCLUDE sensitive data from backups
+        An attacker with ADB access can extract backups using:
+        adb backup -f app.ab -noapk com.watxaut.fontsreviewer
+    -->
+    
+    <!-- Exclude SharedPreferences (may contain auth tokens) -->
+    <exclude domain="sharedpref" path="." />
+    
+    <!-- Exclude Room Database (contains cached fountain data) -->
+    <exclude domain="database" path="." />
+    
+    <!-- Exclude all app files (including DataStore) -->
+    <exclude domain="file" path="." />
+    
+    <!--
+        INCLUDE only non-sensitive data (if any)
+        Example: If you want to backup user's theme preference (non-sensitive):
+        <include domain="sharedpref" path="app_theme.xml"/>
+    -->
+    
 </full-backup-content>

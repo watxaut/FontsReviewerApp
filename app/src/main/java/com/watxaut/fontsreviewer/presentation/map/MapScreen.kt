@@ -127,30 +127,7 @@ fun MapScreenContent(
 ) {
     val sheetState = rememberModalBottomSheetState()
     
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(R.string.map)) }
-            )
-        },
-        floatingActionButton = {
-            // Button to refresh user location
-            FloatingActionButton(
-                onClick = onRefreshLocation,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MyLocation,
-                    contentDescription = "Refresh location"
-                )
-            }
-        }
-    ) { paddingValues ->
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
             is MapUiState.Loading -> {
                 CircularProgressIndicator(
@@ -186,35 +163,34 @@ fun MapScreenContent(
                 }
             }
 
-                is MapUiState.Success -> {
-                    MapboxMapView(
-                        fountains = uiState.fountains,
-                        bestFountainId = uiState.bestFountainId,
-                        userBestFountainId = uiState.userBestFountainId,
-                        userLocation = userLocation,
-                        onFountainClick = onFountainClick,
-                        modifier = Modifier.fillMaxSize()
+            is MapUiState.Success -> {
+                MapboxMapView(
+                    fountains = uiState.fountains,
+                    bestFountainId = uiState.bestFountainId,
+                    userBestFountainId = uiState.userBestFountainId,
+                    userReviewedFountainIds = uiState.userReviewedFountainIds,
+                    userLocation = userLocation,
+                    onFountainClick = onFountainClick,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        
+        // Bottom sheet for quick actions when fountain is selected
+        if (selectedFountainId != null && uiState is MapUiState.Success) {
+            val selectedFountain = uiState.fountains.find { it.codi == selectedFountainId }
+            selectedFountain?.let { fountain ->
+                ModalBottomSheet(
+                    onDismissRequest = onDismissSheet,
+                    sheetState = sheetState
+                ) {
+                    FountainQuickActionSheet(
+                        fountain = fountain,
+                        isAuthenticated = uiState.currentUser != null,
+                        onViewDetails = { onViewDetails(fountain.codi) },
+                        onDismiss = onDismissSheet
                     )
                 }
-        }
-    }
-    
-    }
-    
-    // Bottom sheet for quick actions when fountain is selected
-    if (selectedFountainId != null && uiState is MapUiState.Success) {
-        val selectedFountain = uiState.fountains.find { it.codi == selectedFountainId }
-        selectedFountain?.let { fountain ->
-            ModalBottomSheet(
-                onDismissRequest = onDismissSheet,
-                sheetState = sheetState
-            ) {
-                FountainQuickActionSheet(
-                    fountain = fountain,
-                    isAuthenticated = uiState.currentUser != null,
-                    onViewDetails = { onViewDetails(fountain.codi) },
-                    onDismiss = onDismissSheet
-                )
             }
         }
     }
@@ -226,6 +202,7 @@ fun MapboxMapView(
     fountains: List<Fountain>,
     bestFountainId: String?,
     userBestFountainId: String?,
+    userReviewedFountainIds: Set<String>,
     userLocation: android.location.Location?,
     onFountainClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -244,49 +221,55 @@ fun MapboxMapView(
         }
     }
     
-    MapboxMap(
-        modifier = modifier,
-        mapViewportState = mapViewportState
-    ) {
-        // Separate fountains by type
+    // Function to center map on user location
+    val centerOnUserLocation: () -> Unit = {
+        userLocation?.let { location ->
+            mapViewportState.transitionToFollowPuckState()
+        }
+    }
+    
+    Box(modifier = modifier) {
+        MapboxMap(
+            modifier = Modifier.fillMaxSize(),
+            mapViewportState = mapViewportState
+        ) {
+        // Separate fountains by type (priority order: best global > user best > user reviewed > regular)
         val regularFountains = mutableListOf<Pair<Fountain, Int>>()
+        val userReviewedFountains = mutableListOf<Pair<Fountain, Int>>()
         val bestFountain = mutableListOf<Pair<Fountain, Int>>()
         val userBestFountain = mutableListOf<Pair<Fountain, Int>>()
         
-        // Debug logging
-        android.util.Log.i("MapScreen", "=== RENDERING MARKERS ===")
-        android.util.Log.i("MapScreen", "bestFountainId: $bestFountainId")
-        android.util.Log.i("MapScreen", "userBestFountainId: $userBestFountainId")
-        
         fountains.forEachIndexed { index, fountain ->
             when {
-                fountain.codi == userBestFountainId && fountain.codi != bestFountainId -> {
-                    android.util.Log.i("MapScreen", "User best fountain: ${fountain.codi} - ${fountain.nom}")
-                    userBestFountain.add(fountain to index)
-                }
                 fountain.codi == bestFountainId -> {
-                    android.util.Log.i("MapScreen", "Best fountain: ${fountain.codi} - ${fountain.nom}")
+                    // Best rated fountain globally (gold)
                     bestFountain.add(fountain to index)
                 }
-                else -> 
+                fountain.codi == userBestFountainId && fountain.codi != bestFountainId -> {
+                    // User's personal best fountain (special green with star effect)
+                    userBestFountain.add(fountain to index)
+                }
+                fountain.codi in userReviewedFountainIds -> {
+                    // Fountains user has reviewed (green)
+                    userReviewedFountains.add(fountain to index)
+                }
+                else -> {
+                    // Regular fountains (blue)
                     regularFountains.add(fountain to index)
+                }
             }
         }
         
-        android.util.Log.i("MapScreen", "Regular fountains: ${regularFountains.size}")
-        android.util.Log.i("MapScreen", "Best fountain markers: ${bestFountain.size}")
-        android.util.Log.i("MapScreen", "User best fountain markers: ${userBestFountain.size}")
-        
-        // Add regular fountain markers (simple blue circles)
+        // Add regular fountain markers (blue circles) - LARGER for easier clicking
         if (regularFountains.isNotEmpty()) {
             CircleAnnotationGroup(
                 annotations = regularFountains.map { (fountain, index) ->
                     CircleAnnotationOptions()
                         .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
-                        .withCircleRadius(6.0)
+                        .withCircleRadius(8.0) // Increased from 6.0 to 8.0
                         .withCircleColor("#2196F3") // Blue
                         .withCircleStrokeColor("#FFFFFF") // White border
-                        .withCircleStrokeWidth(1.5)
+                        .withCircleStrokeWidth(2.0) // Increased from 1.5 to 2.0
                         .withData(com.google.gson.JsonPrimitive(fountain.codi))
                 },
                 onClick = { annotation ->
@@ -297,16 +280,36 @@ fun MapboxMapView(
             )
         }
         
-        // Add best fountain marker (larger gold circle)
+        // Add user-reviewed fountain markers (green circles) - NEW!
+        if (userReviewedFountains.isNotEmpty()) {
+            CircleAnnotationGroup(
+                annotations = userReviewedFountains.map { (fountain, _) ->
+                    CircleAnnotationOptions()
+                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                        .withCircleRadius(8.0) // Same size as regular for consistency
+                        .withCircleColor("#4CAF50") // Green - matches user best fountain
+                        .withCircleStrokeColor("#FFFFFF") // White border
+                        .withCircleStrokeWidth(2.0)
+                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                },
+                onClick = { annotation ->
+                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
+                    onFountainClick(codi)
+                    true
+                }
+            )
+        }
+        
+        // Add best fountain marker (largest gold circle with prominent border)
         if (bestFountain.isNotEmpty()) {
             CircleAnnotationGroup(
                 annotations = bestFountain.map { (fountain, _) ->
                     CircleAnnotationOptions()
                         .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
-                        .withCircleRadius(10.0)
+                        .withCircleRadius(12.0) // Increased from 10.0 to 12.0
                         .withCircleColor("#FFD700") // Gold
                         .withCircleStrokeColor("#FF8C00") // Dark orange border
-                        .withCircleStrokeWidth(2.5)
+                        .withCircleStrokeWidth(3.0) // Increased from 2.5 to 3.0
                         .withData(com.google.gson.JsonPrimitive(fountain.codi))
                 },
                 onClick = { annotation ->
@@ -317,16 +320,16 @@ fun MapboxMapView(
             )
         }
         
-        // Add user's best fountain marker (larger green circle)
+        // Add user's best fountain marker (large green circle with special border)
         if (userBestFountain.isNotEmpty()) {
             CircleAnnotationGroup(
                 annotations = userBestFountain.map { (fountain, _) ->
                     CircleAnnotationOptions()
                         .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
-                        .withCircleRadius(10.0)
-                        .withCircleColor("#4CAF50") // Green
+                        .withCircleRadius(12.0) // Increased from 10.0 to 12.0 - matches best fountain
+                        .withCircleColor("#66BB6A") // Lighter green to differentiate from regular reviewed
                         .withCircleStrokeColor("#2E7D32") // Dark green border
-                        .withCircleStrokeWidth(2.5)
+                        .withCircleStrokeWidth(3.0) // Increased from 2.5 to 3.0
                         .withData(com.google.gson.JsonPrimitive(fountain.codi))
                 },
                 onClick = { annotation ->
@@ -349,6 +352,34 @@ fun MapboxMapView(
                         .withCircleStrokeWidth(3.0)
                 )
             )
+        }
+        }
+        
+        // Location button - floating action button to center on user
+        if (userLocation != null) {
+            FloatingActionButton(
+                onClick = {
+                    // Center the map on user location
+                    mapViewportState.flyTo(
+                        cameraOptions = com.mapbox.maps.CameraOptions.Builder()
+                            .center(Point.fromLngLat(userLocation.longitude, userLocation.latitude))
+                            .zoom(16.0) // Closer zoom when centering on user
+                            .build()
+                    )
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .padding(bottom = 80.dp), // Extra padding to avoid bottom nav
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MyLocation,
+                    contentDescription = stringResource(R.string.center_on_location),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

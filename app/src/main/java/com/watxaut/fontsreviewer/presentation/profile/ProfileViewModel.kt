@@ -45,6 +45,34 @@ class ProfileViewModel @Inject constructor(
             _uiState.value = ProfileUiState.NotAuthenticated
         }
     }
+    
+    fun onDeleteAccountClick() {
+        viewModelScope.launch {
+            _uiState.value = ProfileUiState.DeletingAccount
+            
+            authRepository.deleteAccount()
+                .onSuccess {
+                    _uiState.value = ProfileUiState.AccountDeleted
+                }
+                .onFailure { error ->
+                    val currentState = _uiState.value
+                    if (currentState is ProfileUiState.Success) {
+                        _uiState.value = ProfileUiState.DeleteAccountError(
+                            user = currentState.user,
+                            errorMessage = error.message ?: "Failed to delete account"
+                        )
+                    } else {
+                        _uiState.value = ProfileUiState.Error(
+                            error.message ?: "Failed to delete account"
+                        )
+                    }
+                }
+        }
+    }
+    
+    fun onDismissDeleteError() {
+        loadUserProfile()
+    }
 }
 
 sealed class ProfileUiState {
@@ -52,4 +80,7 @@ sealed class ProfileUiState {
     object NotAuthenticated : ProfileUiState()
     data class Success(val user: User) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
+    object DeletingAccount : ProfileUiState()
+    object AccountDeleted : ProfileUiState()
+    data class DeleteAccountError(val user: User, val errorMessage: String) : ProfileUiState()
 }

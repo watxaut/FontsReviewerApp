@@ -1,19 +1,49 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Data Extraction Rules for API 31+ (Android 12+)
+    SECURITY: Exclude sensitive data from cloud backup and device-to-device transfer
+    See: https://developer.android.com/about/versions/12/backup-restore
 -->
 <data-extraction-rules>
-    <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
+    
+    <!-- Cloud Backup Rules (Google Drive, etc.) -->
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <!--
+            Exclude all sensitive data from cloud backups
+            Even with encryption, it's safer to exclude auth tokens and user data
+        -->
+        
+        <!-- Exclude SharedPreferences (may contain auth tokens) -->
+        <exclude domain="sharedpref" path="." />
+        
+        <!-- Exclude Database -->
+        <exclude domain="database" path="." />
+        
+        <!-- Exclude all app files (includes DataStore) -->
+        <exclude domain="file" path="." />
+        
+        <!--
+            INCLUDE only non-sensitive data (if any)
+            Example:
+            <include domain="sharedpref" path="app_settings.xml"/>
         -->
     </cloud-backup>
-    <!--
+    
+    <!-- Device Transfer Rules (device-to-device via cable) -->
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!--
+            Exclude sensitive data from device-to-device transfer
+            This prevents data leakage when selling/trading old device
+        -->
+        
+        <!-- Exclude SharedPreferences -->
+        <exclude domain="sharedpref" path="." />
+        
+        <!-- Exclude Database -->
+        <exclude domain="database" path="." />
+        
+        <!-- Exclude all app files (includes DataStore) -->
+        <exclude domain="file" path="." />
     </device-transfer>
-    -->
+    
 </data-extraction-rules>

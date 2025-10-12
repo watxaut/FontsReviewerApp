@@ -89,7 +89,15 @@ fun FountainDetailsScreen(
         onNavigateBack = onNavigateBack,
         onAddReview = {
             // Check user role and location before allowing review
-            if (uiState is FountainDetailsUiState.Success) {
+            val successState = uiState as? FountainDetailsUiState.Success
+            if (successState != null) {
+                // Check if user has already reviewed
+                if (successState.userHasReviewed) {
+                    locationDialogMessage = "You have already reviewed this fountain.\n\nYou can only review each fountain once."
+                    showLocationDialog = true
+                    return@FountainDetailsContent
+                }
+                
                 val currentUser = viewModel.getCurrentUser()
                 
                 when {
@@ -114,7 +122,7 @@ fun FountainDetailsScreen(
                             scope.launch {
                                 userLocation = LocationUtil.getCurrentLocation(context)
                                 checkLocationAndNavigate(
-                                    uiState = uiState,
+                                    uiState = successState,
                                     userLocation = userLocation,
                                     onAddReview = onAddReview,
                                     onShowDialog = { message ->
@@ -203,7 +211,7 @@ fun FountainDetailsContent(
             )
         },
         floatingActionButton = {
-            if (uiState is FountainDetailsUiState.Success) {
+            if (uiState is FountainDetailsUiState.Success && !uiState.userHasReviewed) {
                 FloatingActionButton(onClick = onAddReview) {
                     Icon(
                         imageVector = Icons.Default.Add,
@@ -255,6 +263,36 @@ fun FountainDetailsContent(
                         // Fountain info card
                         item {
                             FountainInfoCard(fountain = uiState.fountain)
+                        }
+                        
+                        // Show indicator if user has already reviewed
+                        if (uiState.userHasReviewed) {
+                            item {
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "✓",
+                                            style = MaterialTheme.typography.headlineSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "You have already reviewed this fountain",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         // Reviews section header

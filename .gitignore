@@ -46,6 +46,7 @@ Thumbs.db
 # Signing files (if any)
 *.jks
 *.keystore
+keystore.properties
 release/
 
 # claude local specific

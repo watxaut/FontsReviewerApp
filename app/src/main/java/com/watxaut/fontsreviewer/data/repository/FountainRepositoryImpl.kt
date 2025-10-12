@@ -1,7 +1,7 @@
 package com.watxaut.fontsreviewer.data.repository
 
 import android.content.Context
-import android.util.Log
+import com.watxaut.fontsreviewer.util.SecureLog
 import com.watxaut.fontsreviewer.data.remote.service.SupabaseService
 import com.watxaut.fontsreviewer.domain.model.Fountain
 import com.watxaut.fontsreviewer.domain.repository.FountainRepository
@@ -23,11 +23,11 @@ class FountainRepositoryImpl @Inject constructor(
     }
 
     override fun getAllFountains(): Flow<List<Fountain>> = flow {
-        Log.i(TAG, "Fetching all fountains from Supabase...")
+        SecureLog.i(TAG, "Fetching all fountains from Supabase...")
         
         // Check internet connectivity first
         if (!NetworkUtil.isNetworkAvailable(context)) {
-            Log.e(TAG, "No internet connection available")
+            SecureLog.e(TAG, "No internet connection available")
             throw NoInternetException("No internet connection. Please check your network settings.")
         }
         
@@ -50,13 +50,13 @@ class FountainRepositoryImpl @Inject constructor(
                     )
                 }
                 
-                Log.i(TAG, "Fetched ${fountains.size} fountains from Supabase")
-                Log.i(TAG, "Fountains with reviews: ${fountains.count { it.totalReviews > 0 }}")
+                SecureLog.i(TAG, "Fetched ${fountains.size} fountains from Supabase")
+                SecureLog.i(TAG, "Fountains with reviews: ${fountains.count { it.totalReviews > 0 }}")
                 
                 emit(fountains)
             } else {
                 val error = result.exceptionOrNull()
-                Log.e(TAG, "Failed to fetch fountains from Supabase: ${error?.message}")
+                SecureLog.e(TAG, "Failed to fetch fountains from Supabase: ${error?.message}")
                 
                 // Check if it's a network issue
                 if (!NetworkUtil.isNetworkAvailable(context)) {
@@ -68,7 +68,7 @@ class FountainRepositoryImpl @Inject constructor(
         } catch (e: NoInternetException) {
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching fountains: ${e.message}", e)
+            SecureLog.e(TAG, "Error fetching fountains: ${e.message}", e)
             
             // Check if it's a network issue
             if (!NetworkUtil.isNetworkAvailable(context)) {
@@ -83,7 +83,7 @@ class FountainRepositoryImpl @Inject constructor(
         return try {
             // Check internet connectivity
             if (!NetworkUtil.isNetworkAvailable(context)) {
-                Log.w(TAG, "No internet connection for fetching fountain $codi")
+                SecureLog.w(TAG, "No internet connection for fetching fountain $codi")
                 return null
             }
             
@@ -103,18 +103,18 @@ class FountainRepositoryImpl @Inject constructor(
                     )
                 }
             } else {
-                Log.e(TAG, "Failed to fetch fountain $codi: ${result.exceptionOrNull()?.message}")
+                SecureLog.e(TAG, "Failed to fetch fountain $codi: ${result.exceptionOrNull()?.message}")
                 null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching fountain $codi: ${e.message}")
+            SecureLog.e(TAG, "Error fetching fountain $codi: ${e.message}")
             null
         }
     }
 
     override suspend fun initializeFountains() {
         // No longer needed - fountains are in Supabase
-        Log.i(TAG, "initializeFountains called but no longer needed (fountains are in Supabase)")
+        SecureLog.i(TAG, "initializeFountains called but no longer needed (fountains are in Supabase)")
     }
 
     override suspend fun getFountainCount(): Int {
@@ -122,7 +122,7 @@ class FountainRepositoryImpl @Inject constructor(
             val result = supabaseService.getAllFountainsWithStats()
             result.getOrNull()?.size ?: 0
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting fountain count: ${e.message}")
+            SecureLog.e(TAG, "Error getting fountain count: ${e.message}")
             0
         }
     }

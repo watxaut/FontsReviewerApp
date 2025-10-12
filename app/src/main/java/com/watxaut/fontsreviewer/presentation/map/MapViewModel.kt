@@ -18,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MapViewModel @Inject constructor(
     private val getFountainsUseCase: GetFountainsUseCase,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val supabaseService: com.watxaut.fontsreviewer.data.remote.service.SupabaseService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MapUiState>(MapUiState.Loading)
@@ -63,27 +64,21 @@ class MapViewModel @Inject constructor(
                         // Get user's best fountain
                         val userBestFountainId = user?.bestFountainId
                         
-                        // Debug logging
-                        android.util.Log.i("MapViewModel", "=== MAP DATA ===")
-                        android.util.Log.i("MapViewModel", "Total fountains: ${fountains.size}")
-                        android.util.Log.i("MapViewModel", "Fountains with reviews: ${fountains.count { it.totalReviews > 0 }}")
-                        android.util.Log.i("MapViewModel", "Best fountain globally: $bestFountainId")
-                        android.util.Log.i("MapViewModel", "Current user: ${user?.nickname}")
-                        android.util.Log.i("MapViewModel", "User best fountain: $userBestFountainId")
-                        
-                        // Log top 5 fountains by rating
-                        fountains
-                            .filter { it.totalReviews > 0 }
-                            .sortedByDescending { it.averageRating }
-                            .take(5)
-                            .forEachIndexed { index, fountain ->
-                                android.util.Log.i("MapViewModel", "Top ${index + 1}: ${fountain.codi} - ${fountain.nom} (${fountain.averageRating} avg, ${fountain.totalReviews} reviews)")
-                            }
+                        // Get user's reviewed fountain IDs
+                        val userReviewedIds = if (user != null) {
+                            supabaseService.getUserReviewedFountainIds(user.id)
+                                .getOrNull()
+                                ?.toSet()
+                                ?: emptySet()
+                        } else {
+                            emptySet()
+                        }
                         
                         MapUiState.Success(
                             fountains = fountains,
                             bestFountainId = bestFountainId,
                             userBestFountainId = userBestFountainId,
+                            userReviewedFountainIds = userReviewedIds,
                             currentUser = user
                         )
                     }
@@ -124,6 +119,7 @@ sealed class MapUiState {
         val fountains: List<Fountain>,
         val bestFountainId: String? = null,
         val userBestFountainId: String? = null,
+        val userReviewedFountainIds: Set<String> = emptySet(),
         val currentUser: com.watxaut.fontsreviewer.domain.model.User? = null
     ) : MapUiState()
     data class Error(val message: String) : MapUiState()

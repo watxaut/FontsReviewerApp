@@ -1,6 +1,8 @@
 package com.watxaut.fontsreviewer.presentation.auth.register
 
-import android.util.Log
+import com.watxaut.fontsreviewer.util.SecureLog
+import com.watxaut.fontsreviewer.util.InputValidator
+import com.watxaut.fontsreviewer.util.ValidationResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.watxaut.fontsreviewer.domain.usecase.RegisterUseCase
@@ -46,27 +48,28 @@ class RegisterViewModel @Inject constructor(
         val password = _uiState.value.password
         val confirmPassword = _uiState.value.confirmPassword
 
-        // Validation
+        // SECURITY: Validate all inputs before processing
         var hasError = false
-        if (email.isBlank()) {
-            _uiState.update { it.copy(emailError = "Email is required") }
-            hasError = true
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _uiState.update { it.copy(emailError = "Invalid email address") }
-            hasError = true
+        
+        // Validate email
+        when (val result = InputValidator.validateEmail(email)) {
+            is ValidationResult.Error -> {
+                _uiState.update { it.copy(emailError = result.message) }
+                hasError = true
+            }
+            ValidationResult.Valid -> { /* Valid */ }
         }
 
-        if (nickname.isBlank()) {
-            _uiState.update { it.copy(nicknameError = "Nickname is required") }
-            hasError = true
-        } else if (nickname.length < 3) {
-            _uiState.update { it.copy(nicknameError = "Nickname must be at least 3 characters") }
-            hasError = true
-        } else if (nickname.length > 20) {
-            _uiState.update { it.copy(nicknameError = "Nickname must be at most 20 characters") }
-            hasError = true
+        // Validate nickname
+        when (val result = InputValidator.validateNickname(nickname)) {
+            is ValidationResult.Error -> {
+                _uiState.update { it.copy(nicknameError = result.message) }
+                hasError = true
+            }
+            ValidationResult.Valid -> { /* Valid */ }
         }
 
+        // Validate password (using simple validation for backward compatibility)
         if (password.isBlank()) {
             _uiState.update { it.copy(passwordError = "Password is required") }
             hasError = true
@@ -75,6 +78,7 @@ class RegisterViewModel @Inject constructor(
             hasError = true
         }
 
+        // Validate password confirmation
         if (confirmPassword.isBlank()) {
             _uiState.update { it.copy(confirmPasswordError = "Confirm password is required") }
             hasError = true
@@ -86,26 +90,40 @@ class RegisterViewModel @Inject constructor(
         if (hasError) return
 
         viewModelScope.launch {
-            Log.d(TAG, "=== REGISTER VIEW MODEL: START ===")
-            Log.d(TAG, "Email: $email")
-            Log.d(TAG, "Nickname: $nickname")
+            SecureLog.d(TAG, "=== REGISTER VIEW MODEL: START ===")
+            // SECURITY: Never log user email in production
+            SecureLog.d(TAG, "Nickname: $nickname")
             
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            Log.d(TAG, "Calling registerUseCase...")
+            SecureLog.d(TAG, "Calling registerUseCase...")
             registerUseCase(email, nickname, password)
                 .onSuccess { user ->
-                    Log.d(TAG, "=== REGISTER VIEW MODEL: SUCCESS ===")
-                    Log.d(TAG, "User: $user")
+                    SecureLog.d(TAG, "=== REGISTER VIEW MODEL: SUCCESS ===")
+                    SecureLog.d(TAG, "User: $user")
                     _uiState.update { it.copy(isLoading = false, registerSuccess = true) }
                 }
                 .onFailure { error ->
-                    Log.e(TAG, "=== REGISTER VIEW MODEL: FAILURE ===")
-                    Log.e(TAG, "Error: ${error.message}", error)
+                    SecureLog.e(TAG, "=== REGISTER VIEW MODEL: FAILURE ===")
+                    SecureLog.e(TAG, "Error: ${error.message}", error)
+                    
+                    // Parse error message to show user-friendly text
+                    val userFriendlyMessage = when {
+                        error.message?.contains("already registered", ignoreCase = true) == true -> "Email already exists"
+                        error.message?.contains("email exists", ignoreCase = true) == true -> "Email already exists"
+                        error.message?.contains("user already exists", ignoreCase = true) == true -> "Email already exists"
+                        error.message?.contains("nickname", ignoreCase = true) == true -> "Nickname is already taken"
+                        error.message?.contains("invalid email", ignoreCase = true) == true -> "Invalid email format"
+                        error.message?.contains("weak password", ignoreCase = true) == true -> "Password is too weak"
+                        error.message?.contains("network", ignoreCase = true) == true -> "Network error. Please check your connection"
+                        error.message?.contains("timeout", ignoreCase = true) == true -> "Connection timeout. Please try again"
+                        else -> "Registration failed. Please try again"
+                    }
+                    
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Registration failed"
+                            errorMessage = userFriendlyMessage
                         )
                     }
                 }

@@ -28,6 +28,7 @@
     <string name="fountain_details">Detalls de la font</string>
     <string name="view_reviews">Veure ressenyes</string>
     <string name="add_review">Afegir ressenya</string>
+    <string name="center_on_location">Centrar a la meva ubicació</string>
 
     <!-- Reviews -->
     <string name="reviews">Ressenyes</string>
