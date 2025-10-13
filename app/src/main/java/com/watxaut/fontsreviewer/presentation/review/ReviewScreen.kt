@@ -39,6 +39,7 @@ fun ReviewScreen(
         onAestheticsChange = viewModel::onAestheticsChange,
         onSplashChange = viewModel::onSplashChange,
         onJetChange = viewModel::onJetChange,
+        onCommentChange = viewModel::onCommentChange,
         onSubmit = viewModel::onSubmit
     )
 }
@@ -54,6 +55,7 @@ fun ReviewScreenContent(
     onAestheticsChange: (Float) -> Unit,
     onSplashChange: (Float) -> Unit,
     onJetChange: (Float) -> Unit,
+    onCommentChange: (String) -> Unit,
     onSubmit: () -> Unit
 ) {
     Scaffold(
@@ -125,6 +127,19 @@ fun ReviewScreenContent(
                 label = stringResource(R.string.jet),
                 value = uiState.jet,
                 onValueChange = onJetChange
+            )
+
+            // Comment field (optional)
+            OutlinedTextField(
+                value = uiState.comment,
+                onValueChange = onCommentChange,
+                label = { Text(stringResource(R.string.comment_optional)) },
+                supportingText = { 
+                    Text("${uiState.comment.length}/${ReviewViewModel.MAX_COMMENT_LENGTH}") 
+                },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 5
             )
 
             // Overall score (calculated)

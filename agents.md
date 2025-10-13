@@ -63,7 +63,8 @@ FontsReviewer/
 │   │
 │   ├── 03-PRODUCTION/           # Launch preparation
 │   │   ├── DEPLOYMENT_GUIDE.md         # Step-by-step launch process
-│   │   └── SECURITY_CHECKLIST.md       # Security hardening
+│   │   ├── SECURITY_CHECKLIST.md       # Security hardening
+│   │   └── CONTENT_MODERATION_STRATEGY.md  # Community moderation
 │   │
 │   └── 04-SETUP_GUIDES/         # Initial setup instructions
 │       ├── SUPABASE_SETUP.md           # Backend configuration
@@ -119,6 +120,11 @@ FontsReviewer/
 7. **`implementation/03-PRODUCTION/SECURITY_CHECKLIST.md`**
    - Security audit results
    - Hardening recommendations
+
+8. **`implementation/03-PRODUCTION/CONTENT_MODERATION_STRATEGY.md`**
+   - Community moderation approach
+   - AI-powered content filtering
+   - Handling spam and inappropriate content
 
 ---
 
@@ -440,6 +446,7 @@ See **`implementation/02-CURRENT_STATE/KNOWN_ISSUES.md`** for detailed analysis.
 - Backend Setup: `implementation/04-SETUP_GUIDES/SUPABASE_SETUP.md`
 - Deployment: `implementation/03-PRODUCTION/DEPLOYMENT_GUIDE.md`
 - Security: `implementation/03-PRODUCTION/SECURITY_CHECKLIST.md`
+- Content Moderation: `implementation/03-PRODUCTION/CONTENT_MODERATION_STRATEGY.md`
 
 ---
 

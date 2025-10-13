@@ -408,35 +408,6 @@ fun MapboxMapView(
         }
         }
         
-        // DEBUG: Show user info (TEMPORARY - REMOVE AFTER TESTING)
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-                .padding(top = 80.dp)
-        ) {
-            Text(
-                text = "DEBUG INFO:",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = "User: ${currentUser?.nickname ?: "NULL"}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = "Role: ${currentUser?.role ?: "NULL"}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.error
-            )
-            Text(
-                text = "Is Admin: ${currentUser?.role == com.watxaut.fontsreviewer.domain.model.UserRole.ADMIN}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-        
         // Admin controls column (bottom-right, above bottom nav)
         Column(
             modifier = Modifier

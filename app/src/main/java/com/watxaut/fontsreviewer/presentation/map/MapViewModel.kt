@@ -37,6 +37,9 @@ class MapViewModel @Inject constructor(
     
     private val _showDeletedFountains = MutableStateFlow(false)
     val showDeletedFountains: StateFlow<Boolean> = _showDeletedFountains.asStateFlow()
+    
+    // Trigger to force refresh
+    private val _refreshTrigger = MutableStateFlow(0)
 
     init {
         // Listen to Supabase session status changes
@@ -48,21 +51,18 @@ class MapViewModel @Inject constructor(
     private fun listenToSessionChanges() {
         viewModelScope.launch {
             supabaseClient.auth.sessionStatus.collect { status: SessionStatus ->
-                android.util.Log.e("MapViewModel", "Session status changed: $status")
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        android.util.Log.e("MapViewModel", "User authenticated! Source: ${status.source}")
                         // Reload user when session changes
                         loadCurrentUser()
                         loadFountains()
                     }
                     is SessionStatus.NotAuthenticated -> {
-                        android.util.Log.e("MapViewModel", "User not authenticated")
                         _currentUser.value = null
                         loadFountains()
                     }
                     else -> {
-                        android.util.Log.e("MapViewModel", "Session status: $status")
+                        // Other session states
                     }
                 }
             }
@@ -72,57 +72,60 @@ class MapViewModel @Inject constructor(
     private fun loadCurrentUser() {
         viewModelScope.launch {
             val user = authRepository.getCurrentUser()
-            android.util.Log.e("MapViewModel", "DEBUG: loadCurrentUser() called")
-            android.util.Log.e("MapViewModel", "DEBUG: User from authRepository = $user")
-            android.util.Log.e("MapViewModel", "DEBUG: User role = ${user?.role}")
             _currentUser.value = user
         }
     }
 
     private fun loadFountains() {
         viewModelScope.launch {
-            getFountainsUseCase(includeDeleted = _showDeletedFountains.value)
-                .catch { e ->
-                    val errorMessage = when {
-                        e.message?.contains("No internet", ignoreCase = true) == true ->
-                            "No internet connection. Please check your network settings and try again."
-                        else -> e.message ?: "Unknown error"
-                    }
-                    _uiState.value = MapUiState.Error(errorMessage)
-                }
-                .combine(_currentUser) { fountains, user ->
-                    if (fountains.isEmpty()) {
-                        MapUiState.Empty
-                    } else {
-                        // Find the best rated fountain globally
-                        val bestFountainId = fountains
-                            .filter { it.totalReviews > 0 }
-                            .maxByOrNull { it.averageRating }?.codi
-                        
-                        // Get user's best fountain
-                        val userBestFountainId = user?.bestFountainId
-                        
-                        // Get user's reviewed fountain IDs
-                        val userReviewedIds = if (user != null) {
-                            getUserReviewedFountainsUseCase(user.id)
-                                .getOrNull()
-                                ?: emptySet()
-                        } else {
-                            emptySet()
+            combine(
+                _showDeletedFountains,
+                _currentUser,
+                _refreshTrigger
+            ) { showDeleted, user, _ ->
+                Triple(showDeleted, user, Unit)
+            }.collect { (showDeleted, user, _) ->
+                // Fetch fountains from use case
+                getFountainsUseCase(includeDeleted = showDeleted)
+                    .catch { e ->
+                        val errorMessage = when {
+                            e.message?.contains("No internet", ignoreCase = true) == true ->
+                                "No internet connection. Please check your network settings and try again."
+                            else -> e.message ?: "Unknown error"
                         }
-                        
-                        MapUiState.Success(
-                            fountains = fountains,
-                            bestFountainId = bestFountainId,
-                            userBestFountainId = userBestFountainId,
-                            userReviewedFountainIds = userReviewedIds,
-                            currentUser = user
-                        )
+                        _uiState.value = MapUiState.Error(errorMessage)
                     }
-                }
-                .collect { state ->
-                    _uiState.value = state
-                }
+                    .collect { fountains ->
+                        if (fountains.isEmpty()) {
+                            _uiState.value = MapUiState.Empty
+                        } else {
+                            // Find the best rated fountain globally
+                            val bestFountainId = fountains
+                                .filter { it.totalReviews > 0 }
+                                .maxByOrNull { it.averageRating }?.codi
+                            
+                            // Get user's best fountain
+                            val userBestFountainId = user?.bestFountainId
+                            
+                            // Get user's reviewed fountain IDs
+                            val userReviewedIds = if (user != null) {
+                                getUserReviewedFountainsUseCase(user.id)
+                                    .getOrNull()
+                                    ?: emptySet()
+                            } else {
+                                emptySet()
+                            }
+                            
+                            _uiState.value = MapUiState.Success(
+                                fountains = fountains,
+                                bestFountainId = bestFountainId,
+                                userBestFountainId = userBestFountainId,
+                                userReviewedFountainIds = userReviewedIds,
+                                currentUser = user
+                            )
+                        }
+                    }
+            }
         }
     }
 
@@ -137,8 +140,12 @@ class MapViewModel @Inject constructor(
      * Call this after submitting a review to recalculate best fountains
      */
     fun refresh() {
-        loadCurrentUser()
-        loadFountains()
+        viewModelScope.launch {
+            // Reload user data first
+            _currentUser.value = authRepository.getCurrentUser()
+            // Trigger refresh by incrementing the counter
+            _refreshTrigger.value += 1
+        }
     }
     
     /**
@@ -153,7 +160,8 @@ class MapViewModel @Inject constructor(
      */
     fun toggleShowDeletedFountains() {
         _showDeletedFountains.value = !_showDeletedFountains.value
-        loadFountains() // Reload fountains with new filter
+        // Trigger refresh to reload fountains with new filter
+        _refreshTrigger.value += 1
     }
 }
 

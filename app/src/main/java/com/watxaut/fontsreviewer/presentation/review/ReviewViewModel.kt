@@ -48,6 +48,17 @@ class ReviewViewModel @Inject constructor(
         _uiState.update { it.copy(jet = value.toInt()) }
     }
 
+    fun onCommentChange(value: String) {
+        // Limit to 500 characters
+        if (value.length <= MAX_COMMENT_LENGTH) {
+            _uiState.update { it.copy(comment = value) }
+        }
+    }
+
+    companion object {
+        const val MAX_COMMENT_LENGTH = 500
+    }
+
     fun onSubmit() {
         val state = _uiState.value
 
@@ -69,7 +80,7 @@ class ReviewViewModel @Inject constructor(
                 aesthetics = state.aesthetics,
                 splash = state.splash,
                 jet = state.jet,
-                comment = null
+                comment = state.comment.takeIf { it.isNotBlank() }
             )
 
             submitReviewUseCase(request)
@@ -110,6 +121,7 @@ data class ReviewUiState(
     val aesthetics: Int = 0,
     val splash: Int = 0,
     val jet: Int = 0,
+    val comment: String = "",
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
     val submitSuccess: Boolean = false
