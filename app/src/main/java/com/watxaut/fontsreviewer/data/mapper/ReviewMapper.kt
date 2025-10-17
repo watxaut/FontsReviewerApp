@@ -6,6 +6,7 @@ import com.watxaut.fontsreviewer.data.remote.dto.ReviewDto
 import com.watxaut.fontsreviewer.domain.model.CreateReviewRequest
 import com.watxaut.fontsreviewer.domain.model.LeaderboardEntry
 import com.watxaut.fontsreviewer.domain.model.Review
+import com.watxaut.fontsreviewer.util.SecureLog
 import java.time.Instant
 
 fun ReviewDto.toDomain(): Review {
@@ -55,6 +56,9 @@ private fun parseTimestamp(timestamp: String): Long {
     return try {
         Instant.parse(timestamp).toEpochMilli()
     } catch (e: Exception) {
-        System.currentTimeMillis()
+        SecureLog.e("ReviewMapper", "Failed to parse timestamp: '$timestamp'. Error: ${e.message}", e)
+        // Return 0L instead of current time to avoid data corruption
+        // This makes it obvious when timestamps fail to parse (shows as Jan 1, 1970)
+        0L
     }
 }
