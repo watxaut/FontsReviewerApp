@@ -1,0 +1,32 @@
+<!-- Best fountain (global) marker - Gold with crown -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="40"
+    android:viewportHeight="40">
+    
+    <!-- Background circle (larger) -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M20,20m-18,0a18,18 0,1 1,36 0a18,18 0,1 1,-36 0"/>
+    
+    <!-- Orange border (prominent) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF8C00"
+        android:strokeWidth="3"
+        android:pathData="M20,20m-18,0a18,18 0,1 1,36 0a18,18 0,1 1,-36 0"/>
+    
+    <!-- Fountain icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,12c-0.55,0 -1,0.45 -1,1v1h-2c-0.55,0 -1,0.45 -1,1v2c0,0.55 0.45,1 1,1h1v8c0,0.55 0.45,1 1,1h2c0.55,0 1,-0.45 1,-1v-8h1c0.55,0 1,-0.45 1,-1v-2c0,-0.55 -0.45,-1 -1,-1h-2v-1c0,-0.55 -0.45,-1 -1,-1z"/>
+    
+    <!-- Crown badge (top) -->
+    <path
+        android:fillColor="#FF8C00"
+        android:pathData="M20,4l-2,3 -2,-3 -2,3 0,4 8,0 0,-4z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M20,5.5l-1.5,2 -1.5,-2 -1.5,2 0,2.5 6,0 0,-2.5z"/>
+</vector>

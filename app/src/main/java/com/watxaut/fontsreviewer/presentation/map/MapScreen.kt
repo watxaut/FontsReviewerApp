@@ -31,7 +31,12 @@ import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.core.content.ContextCompat
 import com.watxaut.fontsreviewer.BuildConfig
 import com.watxaut.fontsreviewer.R
 import com.watxaut.fontsreviewer.domain.model.Fountain
@@ -220,6 +225,33 @@ fun MapScreenContent(
     }
 }
 
+/**
+ * Helper function to load drawable as bitmap for Mapbox
+ */
+@Composable
+private fun rememberDrawableBitmap(drawableId: Int): Bitmap? {
+    val context = LocalContext.current
+    return remember(drawableId) {
+        try {
+            val drawable = ContextCompat.getDrawable(context, drawableId)
+            if (drawable != null) {
+                val bitmap = Bitmap.createBitmap(
+                    drawable.intrinsicWidth,
+                    drawable.intrinsicHeight,
+                    Bitmap.Config.ARGB_8888
+                )
+                val canvas = Canvas(bitmap)
+                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                drawable.draw(canvas)
+                bitmap
+            } else null
+        } catch (e: Exception) {
+            com.watxaut.fontsreviewer.util.SecureLog.e("MapScreen", "Failed to load drawable $drawableId", e)
+            null
+        }
+    }
+}
+
 @OptIn(MapboxExperimental::class)
 @Composable
 fun MapboxMapView(
@@ -235,9 +267,18 @@ fun MapboxMapView(
     onAddFountain: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    
     // Barcelona center coordinates
     val barcelonaCenterLat = 41.3874
     val barcelonaCenterLon = 2.1686
+    
+    // Load fountain marker images
+    val regularIcon = rememberDrawableBitmap(R.drawable.ic_fountain_regular)
+    val reviewedIcon = rememberDrawableBitmap(R.drawable.ic_fountain_reviewed)
+    val bestIcon = rememberDrawableBitmap(R.drawable.ic_fountain_best)
+    val userBestIcon = rememberDrawableBitmap(R.drawable.ic_fountain_user_best)
+    val deletedIcon = rememberDrawableBitmap(R.drawable.ic_fountain_deleted)
     
     // Create viewport state centered on Barcelona
     val mapViewportState = rememberMapViewportState {
@@ -249,6 +290,14 @@ fun MapboxMapView(
         }
     }
     
+    // Track current zoom level for hybrid rendering
+    var currentZoom by remember { mutableStateOf(13.0) }
+    
+    // Update zoom level when camera changes
+    LaunchedEffect(mapViewportState.cameraState) {
+        currentZoom = mapViewportState.cameraState?.zoom ?: 13.0
+    }
+    
     // Function to center map on user location
     val centerOnUserLocation: () -> Unit = {
         userLocation?.let { location ->
@@ -256,12 +305,12 @@ fun MapboxMapView(
         }
     }
     
-    Box(modifier = modifier) {
-        MapboxMap(
-            modifier = Modifier.fillMaxSize(),
-            mapViewportState = mapViewportState
-        ) {
-        // Separate fountains by type (priority order: best global > user best > user reviewed > deleted > regular)
+    // Images are loaded by Mapbox automatically from drawable resources
+    // No need to manually add them to style when using PointAnnotation with iconImage
+    
+    // Separate fountains by type OUTSIDE MapboxMap to prevent recomposition issues
+    // Using remember to maintain stable references
+    val categorizedFountains = remember(fountains, bestFountainId, userBestFountainId, userReviewedFountainIds, showDeletedFountains) {
         val regularFountains = mutableListOf<Pair<Fountain, Int>>()
         val userReviewedFountains = mutableListOf<Pair<Fountain, Int>>()
         val bestFountain = mutableListOf<Pair<Fountain, Int>>()
@@ -272,7 +321,9 @@ fun MapboxMapView(
             when {
                 fountain.isDeleted -> {
                     // Deleted fountains (red/gray - only visible to admins)
-                    deletedFountains.add(fountain to index)
+                    if (showDeletedFountains) {
+                        deletedFountains.add(fountain to index)
+                    }
                 }
                 fountain.codi == bestFountainId -> {
                     // Best rated fountain globally (gold)
@@ -293,98 +344,185 @@ fun MapboxMapView(
             }
         }
         
-        // Add regular fountain markers (blue circles) - LARGER for easier clicking
+        mapOf(
+            "regular" to regularFountains,
+            "reviewed" to userReviewedFountains,
+            "best" to bestFountain,
+            "userBest" to userBestFountain,
+            "deleted" to deletedFountains
+        )
+    }
+    
+    Box(modifier = modifier) {
+        MapboxMap(
+            modifier = Modifier.fillMaxSize(),
+            mapViewportState = mapViewportState
+        ) {
+        // Extract categorized fountains from stable map
+        val regularFountains = categorizedFountains["regular"] ?: emptyList()
+        val userReviewedFountains = categorizedFountains["reviewed"] ?: emptyList()
+        val bestFountain = categorizedFountains["best"] ?: emptyList()
+        val userBestFountain = categorizedFountains["userBest"] ?: emptyList()
+        val deletedFountains = categorizedFountains["deleted"] ?: emptyList()
+        
+        // Add regular fountain markers - Always use circles for performance (too many to render as images)
         if (regularFountains.isNotEmpty()) {
-            CircleAnnotationGroup(
-                annotations = regularFountains.map { (fountain, index) ->
-                    CircleAnnotationOptions()
-                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
-                        .withCircleRadius(8.0) // Increased from 6.0 to 8.0
-                        .withCircleColor("#2196F3") // Blue
-                        .withCircleStrokeColor("#FFFFFF") // White border
-                        .withCircleStrokeWidth(2.0) // Increased from 1.5 to 2.0
-                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
-                },
-                onClick = { annotation ->
-                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
-                    onFountainClick(codi)
-                    true
-                }
-            )
-        }
-        
-        // Add user-reviewed fountain markers (green circles) - NEW!
-        if (userReviewedFountains.isNotEmpty()) {
-            CircleAnnotationGroup(
-                annotations = userReviewedFountains.map { (fountain, _) ->
-                    CircleAnnotationOptions()
-                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
-                        .withCircleRadius(8.0) // Same size as regular for consistency
-                        .withCircleColor("#4CAF50") // Green - matches user best fountain
-                        .withCircleStrokeColor("#FFFFFF") // White border
-                        .withCircleStrokeWidth(2.0)
-                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
-                },
-                onClick = { annotation ->
-                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
-                    onFountainClick(codi)
-                    true
-                }
-            )
-        }
-        
-        // Add best fountain marker (largest gold circle with prominent border)
-        if (bestFountain.isNotEmpty()) {
-            CircleAnnotationGroup(
-                annotations = bestFountain.map { (fountain, _) ->
-                    CircleAnnotationOptions()
-                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
-                        .withCircleRadius(12.0) // Increased from 10.0 to 12.0
-                        .withCircleColor("#FFD700") // Gold
-                        .withCircleStrokeColor("#FF8C00") // Dark orange border
-                        .withCircleStrokeWidth(3.0) // Increased from 2.5 to 3.0
-                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
-                },
-                onClick = { annotation ->
-                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
-                    onFountainClick(codi)
-                    true
-                }
-            )
-        }
-        
-        // Add user's best fountain marker (large green circle with special border)
-        if (userBestFountain.isNotEmpty()) {
-            CircleAnnotationGroup(
-                annotations = userBestFountain.map { (fountain, _) ->
-                    CircleAnnotationOptions()
-                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
-                        .withCircleRadius(12.0) // Increased from 10.0 to 12.0 - matches best fountain
-                        .withCircleColor("#66BB6A") // Lighter green to differentiate from regular reviewed
-                        .withCircleStrokeColor("#2E7D32") // Dark green border
-                        .withCircleStrokeWidth(3.0) // Increased from 2.5 to 3.0
-                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
-                },
-                onClick = { annotation ->
-                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
-                    onFountainClick(codi)
-                    true
-                }
-            )
-        }
-        
-        // Add deleted fountain markers (gray/red circles - admin only)
-        if (deletedFountains.isNotEmpty() && showDeletedFountains) {
-            CircleAnnotationGroup(
-                annotations = deletedFountains.map { (fountain, _) ->
+            // Create stable annotation list with remember to prevent recreation
+            val regularAnnotations = remember(regularFountains) {
+                regularFountains.map { (fountain, index) ->
                     CircleAnnotationOptions()
                         .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
                         .withCircleRadius(8.0)
-                        .withCircleColor("#757575") // Gray
-                        .withCircleStrokeColor("#D32F2F") // Red border to indicate deleted
+                        .withCircleColor("#2196F3") // Blue
+                        .withCircleStrokeColor("#FFFFFF") // White border
+                        .withCircleStrokeWidth(2.0)
+                        .withCircleSortKey(1.0) // Lower sort key = rendered first (behind other layers)
+                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                }
+            }
+            
+            CircleAnnotationGroup(
+                annotations = regularAnnotations,
+                onClick = { annotation ->
+                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
+                    onFountainClick(codi)
+                    true
+                }
+            )
+        }
+        
+        // Add user-reviewed fountain markers - Always use circles for performance
+        if (userReviewedFountains.isNotEmpty()) {
+            val reviewedAnnotations = remember(userReviewedFountains) {
+                userReviewedFountains.map { (fountain, _) ->
+                    CircleAnnotationOptions()
+                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                        .withCircleRadius(8.0)
+                        .withCircleColor("#4CAF50") // Green
+                        .withCircleStrokeColor("#FFFFFF") // White border
+                        .withCircleStrokeWidth(2.0)
+                        .withCircleSortKey(2.0) // Higher than regular = rendered on top
+                        .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                }
+            }
+            
+            CircleAnnotationGroup(
+                annotations = reviewedAnnotations,
+                onClick = { annotation ->
+                    val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
+                    onFountainClick(codi)
+                    true
+                }
+            )
+        }
+        
+        // Add best fountain marker - Show image only when very zoomed in (1 marker = no performance impact)
+        if (bestFountain.isNotEmpty()) {
+            if (currentZoom >= 16.0 && bestIcon != null) {
+                // Very zoomed in - show gold image with crown
+                val bestImageAnnotations = remember(bestFountain, bestIcon) {
+                    bestFountain.map { (fountain, _) ->
+                        PointAnnotationOptions()
+                            .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                            .withIconImage(bestIcon)
+                            .withIconSize(1.3)
+                            .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                    }
+                }
+                PointAnnotationGroup(
+                    annotations = bestImageAnnotations,
+                    onClick = { annotation ->
+                        val codi = annotation.getData()?.asString ?: return@PointAnnotationGroup false
+                        onFountainClick(codi)
+                        true
+                    }
+                )
+            } else {
+                // Default - show larger gold circle
+                val bestCircleAnnotations = remember(bestFountain) {
+                    bestFountain.map { (fountain, _) ->
+                        CircleAnnotationOptions()
+                            .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                            .withCircleRadius(12.0)
+                            .withCircleColor("#FFD700")
+                            .withCircleStrokeColor("#FF8C00")
+                            .withCircleStrokeWidth(3.0)
+                            .withCircleSortKey(4.0) // Highest priority = always on top
+                            .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                    }
+                }
+                CircleAnnotationGroup(
+                    annotations = bestCircleAnnotations,
+                    onClick = { annotation ->
+                        val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
+                        onFountainClick(codi)
+                        true
+                    }
+                )
+            }
+        }
+        
+        // Add user's best fountain marker - Show image only when very zoomed in (1 marker = no performance impact)
+        if (userBestFountain.isNotEmpty()) {
+            if (currentZoom >= 16.0 && userBestIcon != null) {
+                // Very zoomed in - show green image with star
+                val userBestImageAnnotations = remember(userBestFountain, userBestIcon) {
+                    userBestFountain.map { (fountain, _) ->
+                        PointAnnotationOptions()
+                            .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                            .withIconImage(userBestIcon)
+                            .withIconSize(1.3)
+                            .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                    }
+                }
+                PointAnnotationGroup(
+                    annotations = userBestImageAnnotations,
+                    onClick = { annotation ->
+                        val codi = annotation.getData()?.asString ?: return@PointAnnotationGroup false
+                        onFountainClick(codi)
+                        true
+                    }
+                )
+            } else {
+                // Default - show larger green circle
+                val userBestCircleAnnotations = remember(userBestFountain) {
+                    userBestFountain.map { (fountain, _) ->
+                        CircleAnnotationOptions()
+                            .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                            .withCircleRadius(12.0)
+                            .withCircleColor("#66BB6A")
+                            .withCircleStrokeColor("#2E7D32")
+                            .withCircleStrokeWidth(3.0)
+                            .withCircleSortKey(3.0) // High priority = on top of regular markers
+                            .withData(com.google.gson.JsonPrimitive(fountain.codi))
+                    }
+                }
+                CircleAnnotationGroup(
+                    annotations = userBestCircleAnnotations,
+                    onClick = { annotation ->
+                        val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
+                        onFountainClick(codi)
+                        true
+                    }
+                )
+            }
+        }
+        
+        // Add deleted fountain markers - Always use circles (admin only, already filtered in categorization)
+        if (deletedFountains.isNotEmpty()) {
+            val deletedAnnotations = remember(deletedFountains) {
+                deletedFountains.map { (fountain, _) ->
+                    CircleAnnotationOptions()
+                        .withPoint(Point.fromLngLat(fountain.longitude, fountain.latitude))
+                        .withCircleRadius(8.0)
+                        .withCircleColor("#757575")
+                        .withCircleStrokeColor("#D32F2F")
                         .withCircleStrokeWidth(2.5)
                         .withData(com.google.gson.JsonPrimitive(fountain.codi))
-                },
+                }
+            }
+            CircleAnnotationGroup(
+                annotations = deletedAnnotations,
                 onClick = { annotation ->
                     val codi = annotation.getData()?.asString ?: return@CircleAnnotationGroup false
                     onFountainClick(codi)

@@ -1,0 +1,32 @@
+<!-- User reviewed fountain marker - Green -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    
+    <!-- Background circle -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M16,16m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0"/>
+    
+    <!-- White border -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M16,16m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0"/>
+    
+    <!-- Fountain icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,8c-0.55,0 -1,0.45 -1,1v1h-2c-0.55,0 -1,0.45 -1,1v2c0,0.55 0.45,1 1,1h1v8c0,0.55 0.45,1 1,1h2c0.55,0 1,-0.45 1,-1v-8h1c0.55,0 1,-0.45 1,-1v-2c0,-0.55 -0.45,-1 -1,-1h-2v-1c0,-0.55 -0.45,-1 -1,-1z"/>
+    
+    <!-- Checkmark badge (top right) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,8c0,-1.1 -0.9,-2 -2,-2s-2,0.9 -2,2 0.9,2 2,2 2,-0.9 2,-2z"/>
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M23.5,7.5l-1.5,1.5 -0.5,-0.5c-0.2,-0.2 -0.5,-0.2 -0.7,0s-0.2,0.5 0,0.7l1,1c0.2,0.2 0.5,0.2 0.7,0l2,-2c0.2,-0.2 0.2,-0.5 0,-0.7 -0.2,-0.2 -0.5,-0.2 -0.7,0z"/>
+</vector>
