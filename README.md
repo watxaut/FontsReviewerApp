@@ -116,7 +116,7 @@ MAPBOX_DOWNLOADS_TOKEN=sk.your-secret-token-here
 
 ## 📖 Documentation
 
-- **[agents.md](agents.md)** - Comprehensive guide for AI assistants and developers
+- **[agents.md](AGENTS.md)** - Comprehensive guide for AI assistants and developers
 - **[implementation/IMPLEMENTATION_PLANS.md](implementation/IMPLEMENTATION_PLANS.md)** - Architecture details and design decisions
 - **[implementation/IMPLEMENTATION_STATUS.md](implementation/IMPLEMENTATION_STATUS.md)** - Current progress and known issues
 - **[implementation/SUPABASE_IMPLEMENTATION_GUIDE.md](implementation/SUPABASE_IMPLEMENTATION_GUIDE.md)** - Backend setup guide

@@ -224,6 +224,26 @@ Supported: English (default), Spanish (`-es`), Catalan (`-ca`)
 
 ## 🔨 Development Guidelines
 
+### Documentation Policy
+**⚠️ IMPORTANT: Do NOT create implementation documentation files for routine bug fixes, small features, or minor changes.**
+
+- ✅ **DO create docs for:**
+  - Major features (new screens, significant architecture changes)
+  - Database migrations (always document in `01-MIGRATIONS/`)
+  - Security changes (update `03-PRODUCTION/SECURITY_CHECKLIST.md`)
+  - Deployment changes (update `03-PRODUCTION/DEPLOYMENT_GUIDE.md`)
+  - When explicitly requested by the user
+
+- ❌ **DON'T create docs for:**
+  - Bug fixes (unless they require database changes)
+  - UI tweaks or styling changes
+  - Minor refactoring
+  - Adding/updating string resources
+  - Small code improvements
+  - Routine maintenance tasks
+
+**When in doubt, just fix the issue and update existing documentation if necessary. Don't create new files.**
+
 ### Before Making Changes
 1. ✅ Read `implementation/02-CURRENT_STATE/APP_STATUS.md` for current state
 2. ✅ Read `implementation/02-CURRENT_STATE/KNOWN_ISSUES.md` for technical debt

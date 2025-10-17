@@ -69,7 +69,7 @@ implementation/
 1. Read [APP_STATUS.md](02-CURRENT_STATE/APP_STATUS.md) - understand what's built
 2. Read [MIGRATION_HISTORY.md](01-MIGRATIONS/MIGRATION_HISTORY.md) - understand database
 3. Read [KNOWN_ISSUES.md](02-CURRENT_STATE/KNOWN_ISSUES.md) - understand technical debt
-4. Check main [agents.md](../agents.md) - development guidelines
+4. Check main [agents.md](../AGENTS.md) - development guidelines
 
 ### "I want to launch the app to production"
 1. Read [APP_STATUS.md](02-CURRENT_STATE/APP_STATUS.md) - verify readiness
@@ -89,7 +89,7 @@ implementation/
 ### "I want to add a new feature"
 1. Check [APP_STATUS.md](02-CURRENT_STATE/APP_STATUS.md) - understand architecture
 2. Check [KNOWN_ISSUES.md](02-CURRENT_STATE/KNOWN_ISSUES.md) - avoid known pitfalls
-3. Follow patterns in main [agents.md](../agents.md)
+3. Follow patterns in main [agents.md](../AGENTS.md)
 
 ---
 
@@ -158,7 +158,7 @@ implementation/
 - [Edge Functions](04-SETUP_GUIDES/EDGE_FUNCTION_SETUP.md) - Account deletion
 
 **External Links:**
-- [Main Agent Guide](../agents.md) - Development guidelines
+- [Main Agent Guide](../AGENTS.md) - Development guidelines
 - [Supabase Dashboard](https://app.supabase.com) - Backend admin
 - [Mapbox Dashboard](https://account.mapbox.com) - Maps admin
 
@@ -188,7 +188,7 @@ Follow the [DEPLOYMENT_GUIDE.md](03-PRODUCTION/DEPLOYMENT_GUIDE.md) for step-by-
 
 ---
 
-**Questions?** Check the [APP_STATUS.md](02-CURRENT_STATE/APP_STATUS.md) first, then review [agents.md](../agents.md).
+**Questions?** Check the [APP_STATUS.md](02-CURRENT_STATE/APP_STATUS.md) first, then review [agents.md](../AGENTS.md).
 
 **Last Updated:** 2025-10-12  
 **Maintainer:** watxaut
