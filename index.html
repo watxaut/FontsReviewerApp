@@ -1,44 +1,174 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>FontsReviewer Privacy Policy</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - FontsReviewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 { color: #2196F3; }
+        h2 { color: #555; margin-top: 30px; }
+        .summary { background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .summary ul { margin: 10px 0; }
+        code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; }
+    </style>
 </head>
 <body>
-<h1>Privacy Policy for FontsReviewer</h1>
-<p>Last updated: October 11, 2025</p>
+    <h1>🚰 Privacy Policy - FontsReviewer</h1>
+    <p><strong>Last Updated:</strong> October 18, 2025</p>
+    
+    <div class="summary">
+        <strong>📋 Quick Summary:</strong>
+        <ul>
+            <li>✅ We collect minimal data (email, nickname, reviews)</li>
+            <li>✅ Location used locally only, NEVER stored or sent to servers</li>
+            <li>✅ No tracking, no ads, no data selling</li>
+            <li>✅ You can delete your account anytime</li>
+            <li>✅ Anonymous browsing available (no account needed)</li>
+        </ul>
+    </div>
 
-<h2>Data We Collect</h2>
-<ul>
-    <li><strong>Email Address:</strong> For account authentication</li>
-    <li><strong>Nickname:</strong> Displayed publicly with your reviews</li>
-    <li><strong>Reviews:</strong> Your fountain ratings and comments (public)</li>
-    <li><strong>GPS Location:</strong> Used only to verify you're near fountains. Not
-        stored or transmitted.
-    </li>
-</ul>
+    <h2>Introduction</h2>
+    <p>FontsReviewer ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.</p>
 
-<h2>How We Use Your Data</h2>
-<ul>
-    <li>Provide app functionality (reviews, leaderboard, statistics)</li>
-    <li>Verify operators are within 300m of fountains</li>
-    <li>Display your reviews to other users</li>
-</ul>
+    <h2>Information We Collect</h2>
+    
+    <h3>Account Information</h3>
+    <ul>
+        <li>Email address (for authentication)</li>
+        <li>Nickname (display name)</li>
+        <li>Password (encrypted and stored securely via Supabase)</li>
+    </ul>
 
-<h2>Third-Party Services</h2>
-<ul>
-    <li><strong>Supabase:</strong> Database and authentication</li>
-    <li><strong>Mapbox:</strong> Map display</li>
-    <li><strong>Google Play Services:</strong> GPS location</li>
-</ul>
+    <h3>Usage Data</h3>
+    <ul>
+        <li>Fountain reviews and ratings you submit</li>
+        <li>Your statistics (total reviews, average score)</li>
+        <li>Your best-rated fountain</li>
+    </ul>
 
-<h2>Your Rights (GDPR)</h2>
-<ul>
-    <li>Request account deletion from your profile on the app</li>
-    <li>Export your data</li>
-    <li>Modify your reviews</li>
-</ul>
+    <h3>Location Data</h3>
+    <ul>
+        <li><strong>Coarse location</strong> (approximate, ~100m accuracy) - ONLY when you open the map</li>
+        <li>Used to display your position on the map</li>
+        <li>Used to enforce 300m radius restriction for Operator role users</li>
+        <li><strong>We NEVER track or store your location history</strong></li>
+        <li>Location data is NOT sent to our servers</li>
+        <li>Location is only used locally on your device</li>
+    </ul>
 
-<h2>Contact</h2>
-<p>Email: watxaut@gmail.com</p>
+    <h3>Automatically Collected Information</h3>
+    <ul>
+        <li>Device type and Android version (for crash reporting via Google Play)</li>
+        <li>App usage statistics (anonymous, via Google Play Console)</li>
+    </ul>
+
+    <h2>How We Use Your Information</h2>
+    <ul>
+        <li><strong>Authentication:</strong> To create and manage your account</li>
+        <li><strong>Core Features:</strong> To save your reviews, calculate stats, and display leaderboard</li>
+        <li><strong>Map Display:</strong> To show your current location on the map (not stored)</li>
+        <li><strong>Distance Enforcement:</strong> To verify Operator users are within 300m of fountains (not stored)</li>
+        <li><strong>Crash Reporting:</strong> To identify and fix bugs (anonymous)</li>
+    </ul>
+
+    <h2>Data Storage and Security</h2>
+    <ul>
+        <li>All data is stored securely on <strong>Supabase</strong> (PostgreSQL) with encryption in transit (HTTPS)</li>
+        <li>Passwords are hashed and never stored in plain text</li>
+        <li>We use Row Level Security (RLS) policies to protect your data</li>
+        <li>Your location is NEVER sent to servers or stored anywhere</li>
+    </ul>
+
+    <h2>Data Sharing</h2>
+    <p>We <strong>DO NOT</strong> sell, rent, or share your personal information with third parties, except:</p>
+    <ul>
+        <li><strong>Supabase:</strong> Our backend provider (<a href="https://supabase.com/privacy">privacy policy</a>)</li>
+        <li><strong>Google Play Services:</strong> For app distribution and crash reporting</li>
+        <li><strong>Mapbox:</strong> For map display (<a href="https://www.mapbox.com/legal/privacy">privacy policy</a>)</li>
+    </ul>
+
+    <h2>Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+        <li><strong>Access</strong> your data at any time in the app</li>
+        <li><strong>Edit</strong> your nickname and reviews</li>
+        <li><strong>Delete</strong> your account and all associated data (via Profile settings)</li>
+    </ul>
+    <p>When you delete your account:</p>
+    <ul>
+        <li>Your email, nickname, and all reviews are permanently deleted</li>
+        <li>This action cannot be undone</li>
+        <li>Your account is deleted within 24 hours</li>
+    </ul>
+
+    <h2>Anonymous Usage</h2>
+    <p>You can browse fountains and read reviews <strong>without creating an account</strong>.</p>
+    <p>No data is collected during anonymous browsing except:</p>
+    <ul>
+        <li>Location permission (to show your position on map, if granted)</li>
+        <li>Anonymous crash reports (if app crashes)</li>
+    </ul>
+
+    <h2>Children's Privacy</h2>
+    <p>FontsReviewer is not directed at children under 13. We do not knowingly collect information from children under 13. If you believe we have inadvertently collected such information, please contact us.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify you of changes by:</p>
+    <ul>
+        <li>Updating the "Last Updated" date</li>
+        <li>Showing an in-app notification for major changes</li>
+    </ul>
+
+    <h2>Data Retention</h2>
+    <ul>
+        <li><strong>Active accounts:</strong> Data retained as long as your account exists</li>
+        <li><strong>Deleted accounts:</strong> Data permanently deleted within 24 hours</li>
+        <li><strong>Anonymous crash logs:</strong> Retained for 90 days</li>
+    </ul>
+
+    <h2>Third-Party Services</h2>
+    <p>Our app uses these third-party services:</p>
+    <ul>
+        <li><strong>Supabase</strong> (authentication & database): <a href="https://supabase.com/privacy">https://supabase.com/privacy</a></li>
+        <li><strong>Mapbox</strong> (maps): <a href="https://www.mapbox.com/legal/privacy">https://www.mapbox.com/legal/privacy</a></li>
+        <li><strong>Google Play Services</strong> (location): <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a></li>
+    </ul>
+
+    <h2>Contact Us</h2>
+    <p>If you have questions about this Privacy Policy or your data:</p>
+    <p><strong>Email:</strong> watxaut@gmail.com<br>
+    <strong>App:</strong> FontsReviewer (<code>com.watxaut.fontsreviewer</code>)</p>
+
+    <h2>Legal Basis (GDPR)</h2>
+    <p>For users in the EU, our legal basis for processing your data:</p>
+    <ul>
+        <li><strong>Consent:</strong> You provide consent when creating an account</li>
+        <li><strong>Legitimate Interest:</strong> Crash reporting and app improvements</li>
+        <li><strong>Contract:</strong> Processing necessary to provide app features</li>
+    </ul>
+
+    <h2>Your GDPR Rights (EU Users)</h2>
+    <p>If you're in the EU, you have additional rights:</p>
+    <ul>
+        <li>Right to access your data</li>
+        <li>Right to rectification (edit your data)</li>
+        <li>Right to erasure (delete your account)</li>
+        <li>Right to data portability (export your data - contact us)</li>
+        <li>Right to withdraw consent at any time</li>
+    </ul>
+
+    <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
+    
+    <p style="text-align: center; color: #888; font-size: 14px;">
+        <strong>FontsReviewer</strong> is built with privacy in mind. We only collect what's necessary to provide the service.
+    </p>
 </body>
 </html>
